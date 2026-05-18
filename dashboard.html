@@ -469,13 +469,16 @@
                 var resp = await fetch(RAW_URL + '?t=' + Date.now());
                 if (resp.ok) {
                     g_Users = await resp.json();
+                    localStorage.setItem('yyshimen_data_backup', JSON.stringify(g_Users));
                 } else {
-                    g_Users = [];
+                    throw new Error('HTTP');
                 }
             } catch (e) {
-                g_Users = [];
+                try {
+                    var bk = localStorage.getItem('yyshimen_data_backup');
+                    if (bk) { g_Users = JSON.parse(bk); } else { g_Users = []; }
+                } catch(e2) { g_Users = []; }
             }
-            // Ensure admin exists
             var hasAdmin = false;
             for (var i = 0; i < g_Users.length; i++) {
                 if (g_Users[i].username === 'admin') { hasAdmin = true; break; }
@@ -483,10 +486,25 @@
             if (!hasAdmin) {
                 g_Users.push({
                     id: 'admin_' + Date.now().toString(36),
-                    username: 'admin', password: '123456', nickname: '管理员', avatar: '\uD83D\uDD11',
-                    role: 'admin', createdAt: '2026/5/18',
+                    username: 'admin', password: '123456', nickname: '管理员', avatar: '🔑',
+                    role: 'admin', createdAt: new Date().toLocaleString(),
                     xpData: { xp: 0, checkinDates: [], consecutiveDays: 0, lastDate: '', weekCheckins: [], weekId: '' }
                 });
+            }
+            var cu = getCurrentUser();
+            if (cu) {
+                var found = false;
+                for (var i = 0; i < g_Users.length; i++) {
+                    if (g_Users[i].id === cu.id) { found = true; break; }
+                }
+                if (!found) {
+                    g_Users.push({
+                        id: cu.id, username: cu.username, password: 'local',
+                        nickname: cu.nickname || cu.username, avatar: '🎭',
+                        role: 'member', createdAt: new Date().toLocaleString(),
+                        xpData: { xp: 0, checkinDates: [], consecutiveDays: 0, lastDate: '', weekCheckins: [], weekId: '' }
+                    });
+                }
             }
             g_Loading = false;
             renderAll();
