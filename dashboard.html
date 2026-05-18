@@ -465,8 +465,19 @@
                 g_Users = [];
             }
         async function fetchUsers() {
+            // 初始化本地备份
             try {
-                var resp = await fetch(RAW_URL + '?t=' + Date.now());
+                var bk = localStorage.getItem('yyshimen_data_backup');
+                if (!bk) {
+                    localStorage.setItem('yyshimen_data_backup',
+                        '[{"id":"admin_init","username":"admin","password":"123456","nickname":"管理员","avatar":"🔑","role":"admin","createdAt":"2026/5/18","xpData":{"xp":0,"checkinDates":[],"consecutiveDays":0,"lastDate":"","weekCheckins":[],"weekId":"","weeklyBonusWeek":""}}]');
+                }
+            } catch(e) {}
+            try {
+                var controller = new AbortController();
+                var tid = setTimeout(function(){ controller.abort(); }, 4000);
+                var resp = await fetch(RAW_URL + '?t=' + Date.now(), { signal: controller.signal });
+                clearTimeout(tid);
                 if (resp.ok) {
                     g_Users = await resp.json();
                     localStorage.setItem('yyshimen_data_backup', JSON.stringify(g_Users));
