@@ -469,20 +469,23 @@
             try {
                 var bk = localStorage.getItem('yyshimen_data_backup');
                 if (!bk) {
-                    localStorage.setItem('yyshimen_data_backup',
-                        '[{"id":"admin_init","username":"admin","password":"123456","nickname":"管理员","avatar":"🔑","role":"admin","createdAt":"2026/5/18","xpData":{"xp":0,"checkinDates":[],"consecutiveDays":0,"lastDate":"","weekCheckins":[],"weekId":"","weeklyBonusWeek":""}}]');
+                    localStorage.setItem('yyshimen_data_backup', '[{"id":"admin_init","username":"admin","password":"123456","nickname":"管理员","avatar":"🔑","role":"admin","createdAt":"2026/5/18","xpData":{"xp":0,"checkinDates":[],"consecutiveDays":0,"lastDate":"","weekCheckins":[],"weekId":"","weeklyBonusWeek":""}}]');
                 }
             } catch(e) {}
+            // 先尝试从API读取，超时2秒
             try {
                 var controller = new AbortController();
-                var tid = setTimeout(function(){ controller.abort(); }, 4000);
-                var resp = await fetch(RAW_URL + '?t=' + Date.now(), { signal: controller.signal });
+                var tid = setTimeout(function(){ controller.abort(); }, 2000);
+                var resp = await fetch(API_URL, {
+                    headers: { 'Accept': 'application/vnd.github.v3.raw' },
+                    signal: controller.signal
+                });
                 clearTimeout(tid);
                 if (resp.ok) {
                     g_Users = await resp.json();
                     localStorage.setItem('yyshimen_data_backup', JSON.stringify(g_Users));
                 } else {
-                    throw new Error('HTTP');
+                    throw new Error('HTTP ' + resp.status);
                 }
             } catch (e) {
                 try {
