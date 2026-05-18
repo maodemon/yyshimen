@@ -442,21 +442,12 @@
             return idx;
         }
 
-        // ========== GitHub API ==========
+        // ========== Vercel 云同步 ==========
+        var SYNC_SERVER = "https://yyshimen-deploy.vercel.app/api/sync";
 
         var g_Users = [];
         var g_Loading = true;
 
-        
-            try {
-                if (resp.ok) {
-                    g_Users = await resp.json();
-                } else {
-                    g_Users = [];
-                }
-            } catch (e) {
-                g_Users = [];
-            }
         async function fetchUsers() {
             // 立刻从本地备份加载（保证秒开）
             try {
