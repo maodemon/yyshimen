@@ -637,7 +637,7 @@
             <li><a href="#intro">师门</a></li>
 
             <li><a href="#members">门人</a></li>
-            <li><a href="#" onclick="event.preventDefault();showLogin();" id="navAuthBtn">登录</a></li>
+            <li><span id="navAuthArea"><a href="#" onclick="event.preventDefault();showLogin();" id="navAuthBtn">登录</a></span></li>
             <li><a href="#skills">功法</a></li>
             <li><a href="#join">加入</a></li>
         </ul>
@@ -1026,6 +1026,8 @@
         .auth-submit:hover { background: #a08560; }
         .auth-submit:disabled { opacity: 0.5; cursor: not-allowed; }
         #navAuthBtn { cursor: pointer; }
+        .nav-auth-link { color:#8b7355; text-decoration:none; font-size:0.85rem; margin:0 4px; }
+        .nav-auth-link:hover { color:#d4c9a8; }
         .user-badge {
             display: inline-flex; align-items: center; gap: 6px;
             color: #d4c9a8; font-size: 0.85rem;
@@ -1229,20 +1231,16 @@
 
         // ========== 更新导航栏 ==========
         function updateAuthUI() {
-            const navBtn = document.getElementById('navAuthBtn');
+            const navArea = document.getElementById('navAuthArea');
             const userData = localStorage.getItem('yyshimen_current_user');
             if (userData) {
                 try {
                     const user = JSON.parse(userData);
-                    var adminLink = user.role === 'admin' ? '<a href="dashboard.html" style="color:#d4a056;text-decoration:none;margin:0 4px;font-size:0.75rem;">⚙️管理</a>' : '';
-                    navBtn.innerHTML = '<span class="user-badge"><span class="avatar">' + (user.avatar || '🎭') + '</span> ' + (user.nickname || user.username) + ' ' + adminLink + '<a href="dashboard.html" style="color:#8b7355;text-decoration:none;margin:0 4px;font-size:0.75rem;">签到</a><button class="logout-btn" onclick="event.stopPropagation();handleLogout()">退出</button></span>';
-                    navBtn.href = '#';
-                    navBtn.onclick = function(e) { e.preventDefault(); };
+                    var adminLink = user.role === 'admin' ? '<a href="dashboard.html" class="nav-auth-link" style="color:#d4a056;">⚙️管理</a>' : '';
+                    navArea.innerHTML = '<span class="user-badge"><span class="avatar">' + (user.avatar || '🎭') + '</span> ' + (user.nickname || user.username) + ' ' + adminLink + '<a href="dashboard.html" class="nav-auth-link" style="color:#8b7355;">签到</a><button class="logout-btn" onclick="handleLogout()">退出</button></span>';
                 } catch { localStorage.removeItem('yyshimen_current_user'); updateAuthUI(); }
             } else {
-                navBtn.innerHTML = '登录';
-                navBtn.href = '#';
-                navBtn.onclick = function(e) { e.preventDefault(); showLogin(); };
+                navArea.innerHTML = '<a href="#" onclick="event.preventDefault();showLogin();" id="navAuthBtn" style="cursor:pointer;">登录</a>';
             }
         }
 
