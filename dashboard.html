@@ -417,7 +417,7 @@
         const DAILY_XP = 10;
         const WEEKLY_BONUS_XP = 30;
 
-        // ========== Helpers ==========
+                // ========== Helpers ==========
         function today() {
             return new Date().toISOString().slice(0, 10);
         }
@@ -427,364 +427,331 @@
             start.setDate(d.getDate() - d.getDay() + (d.getDay() === 0 ? -6 : 1));
             return start.toISOString().slice(0, 10);
         }
-        function getUsers() {
-            try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
-        }
-        function saveUsers(users) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
-        }
         function getCurrentUser() {
             try { return JSON.parse(localStorage.getItem('yyshimen_current_user')); } catch { return null; }
         }
 
         function getLevel(xp) {
             let lv = LEVELS[0];
-            for (const l of LEVELS) {
-                if (xp >= l.min) lv = l;
-            }
+            for (const l of LEVELS) { if (xp >= l.min) lv = l; }
             return lv;
         }
         function getLevelIndex(xp) {
             let idx = 0;
-            for (let i = 0; i < LEVELS.length; i++) {
-                if (xp >= LEVELS[i].min) idx = i;
-            }
+            for (let i = 0; i < LEVELS.length; i++) { if (xp >= LEVELS[i].min) idx = i; }
             return idx;
         }
 
-        // ========== Check-in ==========
-        function doCheckin() {
-            const currentUser = getCurrentUser();
-            if (!currentUser) { window.location.href = 'https://maodemon.github.io/yyshimen/'; return; }
+        // ========== GitHub API ==========
+        const GITHUB_TOKEN = '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';
+        const REPO_OWNER = 'maodemon';
+        const REPO_NAME = 'yyshimen';
+        const FILE_PATH = 'data/users.json';
+        const RAW_URL = 'https://raw.githubusercontent.com/' + REPO_OWNER + '/' + REPO_NAME + '/master/' + FILE_PATH;
+        const API_URL = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + FILE_PATH;
 
-            const users = getUsers();
-            const idx = users.findIndex(u => u.id === currentUser.id);
-            if (idx === -1) return;
+        var g_Users = [];
+        var g_Loading = true;
 
-            const user = users[idx];
-            if (!user.xpData) {
-                user.xpData = { xp: 0, checkinDates: [], consecutiveDays: 0, lastDate: '', weekCheckins: [], weekId: '' };
-            }
-            const data = user.xpData;
-            const td = today();
-            const weekId = getWeekId();
-
-            // Already checked in today
-            if (data.checkinDates.includes(td)) {
-                showToast('今天已经签到过了～ 🐟');
-                return;
-            }
-
-            // Calculate streak
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            const yStr = yesterday.toISOString().slice(0, 10);
-
-            let streak = data.consecutiveDays || 0;
-            if (data.lastDate === yStr) {
-                streak += 1;
-            } else if (data.lastDate === td) {
-                // already handled above
-            } else {
-                streak = 1; // reset streak
-            }
-
-            // Calculate bonus from streak
-            let bonusXp = 0;
-            for (const sb of STREAK_BONUSES) {
-                if (streak === sb.day) {
-                    bonusXp = sb.bonus;
-                    break;
+        
+            try {
+                const resp = await fetch(RAW_URL + '?t=' + Date.now());
+                if (resp.ok) {
+                    g_Users = await resp.json();
+                } else {
+                    g_Users = [];
                 }
+            } catch (e) {
+                g_Users = [];
             }
-
-            let totalXpGain = DAILY_XP + bonusXp;
-
-            // Weekly tracking
-            let weekCheckins = data.weekCheckins || [];
-            let storedWeekId = data.weekId || '';
-            if (storedWeekId !== weekId) {
-                weekCheckins = [];
-                storedWeekId = weekId;
-            }
-            if (!weekCheckins.includes(td)) {
-                weekCheckins.push(td);
-            }
-
-            // Weekly bonus (满7天)
-            let weeklyBonus = 0;
-            if (weekCheckins.length >= 7) {
-                // check if already got this week's bonus
-                if (!data.weeklyBonusWeek || data.weeklyBonusWeek !== weekId) {
-                    weeklyBonus = WEEKLY_BONUS_XP;
-                    data.weeklyBonusWeek = weekId;
+        async function fetchUsers() {
+            try {
+                var resp = await fetch(RAW_URL + '?t=' + Date.now());
+                if (resp.ok) {
+                    g_Users = await resp.json();
+                } else {
+                    g_Users = [];
                 }
+            } catch (e) {
+                g_Users = [];
+            }
+            // Ensure admin exists
+            var hasAdmin = false;
+            for (var i = 0; i < g_Users.length; i++) {
+                if (g_Users[i].username === 'admin') { hasAdmin = true; break; }
+            }
+            if (!hasAdmin) {
+                g_Users.push({
+                    id: 'admin_' + Date.now().toString(36),
+                    username: 'admin', password: '123456', nickname: '管理员', avatar: '\uD83D\uDD11',
+                    role: 'admin', createdAt: '2026/5/18',
+                    xpData: { xp: 0, checkinDates: [], consecutiveDays: 0, lastDate: '', weekCheckins: [], weekId: '' }
+                });
+            }
+            g_Loading = false;
+            renderAll();
+        }
+
+        async function saveUsersToGitHub() {
+            try {
+                var sha = '';
+                var getResp = await fetch(API_URL, {
+                    headers: { 'Authorization': 'Bearer ' + GITHUB_TOKEN }
+                });
+                if (getResp.ok) {
+                    var d = await getResp.json();
+                    sha = d.sha;
+                }
+                var enc = [];
+                var jsonStr = JSON.stringify(g_Users, null, 2);
+                for (var i = 0; i < jsonStr.length; i++) {
+                    enc.push(jsonStr.charCodeAt(i));
+                }
+                var content = btoa(String.fromCharCode.apply(null, enc));
+                var putResp = await fetch(API_URL, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + GITHUB_TOKEN,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: '签到更新 ' + today(),
+                        content: content,
+                        sha: sha || undefined
+                    })
+                });
+                if (!putResp.ok) {
+                    var errText = await putResp.text();
+                    showToast('\u26A0\uFE0F \u6570\u636E\u540C\u6B65\u5931\u8D25\uFF0C\u8BF7\u5237\u65B0\u91CD\u8BD5');
+                }
+            } catch (e) {
+                showToast('\u26A0\uFE0F \u7F51\u7EDC\u5F02\u5E38\uFF0C\u6570\u636E\u53EF\u80FD\u672A\u4FDD\u5B58');
+            }
+        }
+
+        async function doCheckin() {
+            var cu = getCurrentUser();
+            if (!cu) { window.location.href = 'https://maodemon.github.io/yyshimen/'; return; }
+            var idx = -1;
+            for (var i = 0; i < g_Users.length; i++) {
+                if (g_Users[i].id === cu.id) { idx = i; break; }
+            }
+            if (idx === -1) { showToast('账号不存在'); return; }
+            var user = g_Users[idx];
+            if (!user.xpData) { user.xpData = { xp: 0, checkinDates: [], consecutiveDays: 0, lastDate: '', weekCheckins: [], weekId: '' }; }
+            var data = user.xpData;
+            var td = today();
+            var weekId = getWeekId();
+            if (data.checkinDates && data.checkinDates.includes(td)) { showToast('今天已经签到过了'); return; }
+            var y = new Date();
+            y.setDate(y.getDate() - 1);
+            var yStr = y.toISOString().slice(0, 10);
+            var streak = data.consecutiveDays || 0;
+            if (data.lastDate === yStr) { streak += 1; }
+            else if (data.lastDate !== td) { streak = 1; }
+            var bonusXp = 0;
+            for (var k = 0; k < STREAK_BONUSES.length; k++) {
+                if (streak === STREAK_BONUSES[k].day) { bonusXp = STREAK_BONUSES[k].bonus; break; }
+            }
+            var totalXpGain = DAILY_XP + bonusXp;
+            var weekCheckins = data.weekCheckins || [];
+            var swId = data.weekId || '';
+            if (swId !== weekId) { weekCheckins = []; swId = weekId; }
+            if (weekCheckins.indexOf(td) === -1) { weekCheckins.push(td); }
+            var weeklyBonus = 0;
+            if (weekCheckins.length >= 7 && (!data.weeklyBonusWeek || data.weeklyBonusWeek !== weekId)) {
+                weeklyBonus = WEEKLY_BONUS_XP;
+                data.weeklyBonusWeek = weekId;
             }
             totalXpGain += weeklyBonus;
-
-            // Update data
             data.xp = (data.xp || 0) + totalXpGain;
+            if (!data.checkinDates) data.checkinDates = [];
             data.checkinDates.push(td);
             data.consecutiveDays = streak;
             data.lastDate = td;
             data.weekCheckins = weekCheckins;
-            data.weekId = storedWeekId;
-
-            users[idx] = user;
-            saveUsers(users);
-
-            // Update current user display data
-            const level = getLevel(data.xp);
-            const msg = `签到成功！+${DAILY_XP}经验` +
-                (bonusXp > 0 ? `\n连续签到${streak}天奖励 +${bonusXp}经验 🎉` : '') +
-                (weeklyBonus > 0 ? `\n🏆 一周鱼王！+${weeklyBonus}经验` : '');
+            data.weekId = swId;
+            g_Users[idx] = user;
+            await saveUsersToGitHub();
+            var msg = '签到成功！+' + DAILY_XP + '经验';
+            if (bonusXp > 0) msg += '<br>连续' + streak + '天 +' + bonusXp + '经验';
+            if (weeklyBonus > 0) msg += '<br>一周鱼王 +' + weeklyBonus + '经验';
             showToast(msg);
-
-            // Update UI
-            render();
+            renderAll();
         }
 
-        // ========== Toast ==========
         function showToast(msg) {
-            const el = document.getElementById('toast');
-            el.innerHTML = msg.replace(/\n/g, '<br>');
+            var el = document.getElementById('toast');
+            el.innerHTML = msg;
             el.classList.add('show');
-            setTimeout(() => el.classList.remove('show'), 3500);
+            setTimeout(function() { el.classList.remove('show'); }, 4000);
         }
 
-        // ========== Render ==========
-        function render() {
-            const currentUser = getCurrentUser();
-            if (!currentUser) {
+        function renderAll() {
+            var cu = getCurrentUser();
+            if (!cu) {
                 document.getElementById('app').innerHTML = '<div class="section-card" style="text-align:center;padding:3rem;"><h2>未登录</h2><p style="color:#6b5d4a;margin-top:1rem;">请先去首页登录～</p><a href="https://maodemon.github.io/yyshimen/" style="display:inline-block;margin-top:1rem;padding:0.7rem 2rem;border:1px solid #8b7355;color:#d4c9a8;text-decoration:none;border-radius:4px;">返回首页</a></div>';
                 return;
             }
+            if (g_Loading) {
+                document.getElementById('userName').textContent = '加载中...';
+                return;
+            }
+            var user = null;
+            for (var i = 0; i < g_Users.length; i++) {
+                if (g_Users[i].id === cu.id) { user = g_Users[i]; break; }
+            }
+            if (!user) { showToast('账号不存在，请重新登录'); return; }
+            var data = user.xpData || {};
+            var xp = data.xp || 0;
+            var level = getLevel(xp);
+            var lvIdx = getLevelIndex(xp);
+            var td = today();
+            var checkedIn = data.checkinDates ? data.checkinDates.indexOf(td) !== -1 : false;
+            var streak = data.consecutiveDays || 0;
 
-            const users = getUsers();
-            const user = users.find(u => u.id === currentUser.id);
-            if (!user) return;
-
-            const data = user.xpData || { xp: 0, checkinDates: [], consecutiveDays: 0, lastDate: '', weekCheckins: [], weekId: '' };
-            const xp = data.xp || 0;
-            const level = getLevel(xp);
-            const lvIdx = getLevelIndex(xp);
-            const td = today();
-            const checkedIn = data.checkinDates.includes(td);
-            const streak = data.consecutiveDays || 0;
-
-            // User card
-            document.getElementById('userAvatar').textContent = user.avatar || '🎭';
+            document.getElementById('userAvatar').textContent = user.avatar || '\uD83C\uDFAD';
             document.getElementById('userName').textContent = user.nickname || user.username;
-            document.getElementById('userLevel').textContent = 'Lv.' + (lvIdx + 1) + ' · ' + level.name;
-            document.getElementById('userXpText').textContent = '经验: ' + xp;
+            document.getElementById('userLevel').textContent = 'Lv.' + (lvIdx + 1) + ' \u00B7 ' + level.name;
+            document.getElementById('userXpText').textContent = '\u7ECF\u9A8C: ' + xp;
             document.getElementById('streakNum').textContent = streak;
 
-            // Check-in button
-            const btn = document.getElementById('checkinBtn');
+            var btn = document.getElementById('checkinBtn');
             if (checkedIn) {
-                btn.textContent = '✅ 今日已签';
-                btn.classList.add('done');
-                btn.disabled = true;
+                btn.textContent = '\u2705 \u4ECA\u65E5\u5DF2\u7B7E';
+                btn.classList.add('done'); btn.disabled = true;
             } else {
-                btn.textContent = '📌 签 到';
-                btn.classList.remove('done');
-                btn.disabled = false;
+                btn.textContent = '\uD83D\uDCCC \u7B7E \u5230';
+                btn.classList.remove('done'); btn.disabled = false;
             }
-            document.getElementById('todayDone').textContent = checkedIn ? '是 ✅' : '否';
+            document.getElementById('todayDone').textContent = checkedIn ? '\u662F \u2705' : '\u5426';
 
-            // XP Bar
-            const nextLv = LEVELS[Math.min(lvIdx + 1, LEVELS.length - 1)];
-            const currentLv = LEVELS[lvIdx];
-            const range = nextLv.max - currentLv.min;
-            const progress = Math.min((xp - currentLv.min) / range * 100, 100);
-            document.getElementById('currentLevelName').textContent = currentLv.name;
-            document.getElementById('nextLevelName').textContent = (lvIdx < LEVELS.length - 1) ? '→ ' + nextLv.name : '已满级';
-            document.getElementById('xpBar').style.width = Math.min(progress, 100) + '%';
-            document.getElementById('xpBarLabel').textContent = (xp - currentLv.min) + ' / ' + range + ' XP';
+            var nextLv = LEVELS[Math.min(lvIdx + 1, LEVELS.length - 1)];
+            var curLv = LEVELS[lvIdx];
+            var range = nextLv.max - curLv.min;
+            var pct = Math.min((xp - curLv.min) / range * 100, 100);
+            document.getElementById('currentLevelName').textContent = curLv.name;
+            document.getElementById('nextLevelName').textContent = (lvIdx < LEVELS.length - 1) ? '\u2192 ' + nextLv.name : '\u5DF2\u6EE1\u7EA7';
+            document.getElementById('xpBar').style.width = Math.min(pct, 100) + '%';
+            document.getElementById('xpBarLabel').textContent = (xp - curLv.min) + ' / ' + range + ' XP';
 
-            // Week streak
-            const weekId = getWeekId();
-            const weekCheckins = (data.weekId === weekId) ? (data.weekCheckins || []) : [];
-            document.getElementById('weekCount').textContent = weekCheckins.length;
+            var weekId = getWeekId();
+            var weekCk = (data.weekId === weekId) ? (data.weekCheckins || []) : [];
+            document.getElementById('weekCount').textContent = weekCk.length;
 
-            const weekEl = document.getElementById('weekStreak');
-            const weekDays = ['一', '二', '三', '四', '五', '六', '日'];
-            let wHtml = '';
-            for (let i = 0; i < 7; i++) {
-                const d = new Date();
-                const startOfWeek = new Date(d);
-                startOfWeek.setDate(d.getDate() - d.getDay() + 1);
-                const dateStr = new Date(startOfWeek);
-                dateStr.setDate(startOfWeek.getDate() + i);
-                const ds = dateStr.toISOString().slice(0, 10);
-                const isChecked = weekCheckins.includes(ds);
-                const isToday = ds === td;
-                wHtml += '<div class="streak-dot' + (isChecked ? ' active' : '') + (isToday ? ' bonus' : '') + '">' + (isChecked ? '✓' : weekDays[i]) + '</div>';
+            var wEl = document.getElementById('weekStreak');
+            var wDays = ['\u4E00', '\u4E8C', '\u4E09', '\u56DB', '\u4E94', '\u516D', '\u65E5'];
+            var wh = '';
+            for (var i = 0; i < 7; i++) {
+                var d = new Date();
+                var s = new Date(d);
+                s.setDate(d.getDate() - d.getDay() + 1);
+                var ds = new Date(s);
+                ds.setDate(s.getDate() + i);
+                var dss = ds.toISOString().slice(0, 10);
+                var ic = weekCk.indexOf(dss) !== -1;
+                wh += '<div class="streak-dot' + (ic ? ' active' : '') + (dss === td ? ' bonus' : '') + '">' + (ic ? '\u2713' : wDays[i]) + '</div>';
             }
-            weekEl.innerHTML = wHtml;
+            wEl.innerHTML = wh;
 
-            // Streak bonuses
-            const bonusEl = document.getElementById('streakBonusGrid');
-            let bHtml = '';
-            for (const sb of STREAK_BONUSES) {
-                const isReached = streak >= sb.day;
-                bHtml += '<div class="streak-item' + (isReached ? ' highlight' : '') + '">' +
-                    '<div class="day">第' + sb.day + '天</div>' +
-                    '<div class="bonus">+' + sb.bonus + ' XP</div>' +
-                    (isReached ? '✅' : '');
-                if (streak === sb.day - 1) bHtml += '<div style="font-size:0.6rem;color:#ffd700;">⭐ 明日达成</div>';
-                bHtml += '</div>';
+            var bEl = document.getElementById('streakBonusGrid');
+            var bh = '';
+            for (var k = 0; k < STREAK_BONUSES.length; k++) {
+                var sb = STREAK_BONUSES[k];
+                var ir = streak >= sb.day;
+                bh += '<div class="streak-item' + (ir ? ' highlight' : '') + '"><div class="day">\u7B2C' + sb.day + '\u5929</div><div class="bonus">+' + sb.bonus + ' XP</div>' + (ir ? '\u2705' : '');
+                if (streak === sb.day - 1) bh += '<div style="font-size:0.6rem;color:#ffd700;">\u2B50 \u660E\u65E5\u8FBE\u6210</div>';
+                bh += '</div>';
             }
-            bonusEl.innerHTML = bHtml;
+            bEl.innerHTML = bh;
 
-            // Leaderboard
-            const lbBody = document.getElementById('lbBody');
-            const sorted = users
-                .map(u => ({ ...u, xp: (u.xpData && u.xpData.xp) || 0, streak: (u.xpData && u.xpData.consecutiveDays) || 0, weekCk: (u.xpData && u.xpData.weekId === weekId) ? (u.xpData.weekCheckins || []).length : 0 }))
-                .sort((a, b) => b.xp - a.xp);
-
-            let lbHtml = '';
-            sorted.forEach((u, i) => {
-                const lv = getLevel(u.xp);
-                const isMe = u.id === currentUser.id;
-                const rankClass = i === 0 ? ' gold' : i === 1 ? ' silver' : i === 2 ? ' bronze' : '';
-                const weekFull = u.weekCk >= 7;
-                lbHtml += '<tr' + (isMe ? ' class="current-user"' : '') + '>' +
-                    '<td class="rank' + rankClass + '">' + (i + 1) + '</td>' +
-                    '<td class="name-col">' + (u.nickname || u.username) + (weekFull ? '<span class="lb-title-tag">👑一周鱼王</span>' : '') + '</td>' +
-                    '<td class="level-col">' + lv.name + '</td>' +
-                    '<td class="xp-col">' + u.xp + ' XP</td>' +
-                    '</tr>';
-            });
-            lbBody.innerHTML = lbHtml;
-
-            // All levels
-            const lvGrid = document.getElementById('levelGrid');
-            let lvHtml = '';
-            LEVELS.forEach((l, i) => {
-                const isCurrent = i === lvIdx;
-                const rangeStr = l.max >= 999999 ? l.min + '+' : l.min + '～' + l.max;
-                lvHtml += '<div class="level-item' + (isCurrent ? ' current' : '') + '">' +
-                    '<div class="lv-name">' + (isCurrent ? '▶ ' : '') + l.name + '</div>' +
-                    '<div class="lv-range">' + rangeStr + ' XP</div>' +
-                    '</div>';
-            });
-            lvGrid.innerHTML = lvHtml;
-        }
-
-        // ========== 管理员系统 ==========
-        const ADMIN_CRED = { username: 'admin', password: '123456' };
-
-        function ensureAdmin() {
-            let users = getUsers();
-            if (!users.find(u => u.username === 'admin')) {
-                users.push({
-                    id: 'admin_' + Date.now().toString(36),
-                    username: 'admin',
-                    password: '123456',
-                    nickname: '管理员',
-                    avatar: '🔑',
-                    role: 'admin',
-                    createdAt: new Date().toLocaleString(),
-                    xpData: { xp: 0, checkinDates: [], consecutiveDays: 0, lastDate: '', weekCheckins: [], weekId: '' }
-                });
-                saveUsers(users);
-            }
-        }
-
-        function adminAddUser() {
-            const username = document.getElementById('adminNewUsername').value.trim();
-            const nickname = document.getElementById('adminNewNickname').value.trim() || username;
-            const password = document.getElementById('adminNewPassword').value.trim();
-            const msgEl = document.getElementById('adminMsg');
-
-            if (!username || !password) {
-                msgEl.textContent = '❌ 账号和密码不能为空';
-                msgEl.style.color = '#c0392b';
-                return;
-            }
-            if (username.length < 2 || username.length > 20) {
-                msgEl.textContent = '❌ 账号长度需2-20位';
-                msgEl.style.color = '#c0392b';
-                return;
+            var lb = document.getElementById('lbBody');
+            if (g_Users.length === 0) {
+                lb.innerHTML = '<tr><td colspan="4" style="color:#6b5d4a;text-align:center;padding:1rem;">\u6682\u65E0\u6570\u636E</td></tr>';
+            } else {
+                var sorted = [];
+                for (var i = 0; i < g_Users.length; i++) {
+                    var u = g_Users[i];
+                    sorted.push({ u: u, xp: (u.xpData && u.xpData.xp) || 0, wc: (u.xpData && u.xpData.weekId === weekId) ? (u.xpData.weekCheckins || []).length : 0 });
+                }
+                sorted.sort(function(a, b) { return b.xp - a.xp; });
+                var lh = '';
+                for (var i = 0; i < sorted.length; i++) {
+                    var s = sorted[i];
+                    var lv = getLevel(s.xp);
+                    var isMe = s.u.id === cu.id;
+                    var rc = i === 0 ? ' gold' : i === 1 ? ' silver' : i === 2 ? ' bronze' : '';
+                    var wf = s.wc >= 7;
+                    lh += '<tr' + (isMe ? ' class="current-user"' : '') + '><td class="rank' + rc + '">' + (i + 1) + '</td><td class="name-col">' + (s.u.nickname || s.u.username) + (wf ? '<span class="lb-title-tag">\uD83D\uDC51\u4E00\u5468\u9C7C\u738B</span>' : '') + '</td><td class="level-col">' + lv.name + '</td><td class="xp-col">' + s.xp + ' XP</td></tr>';
+                }
+                lb.innerHTML = lh;
             }
 
-            const users = getUsers();
-            if (users.find(u => u.username === username)) {
-                msgEl.textContent = '❌ 账号已存在';
-                msgEl.style.color = '#c0392b';
-                return;
+            var lg = document.getElementById('levelGrid');
+            var lvh = '';
+            for (var i = 0; i < LEVELS.length; i++) {
+                var l = LEVELS[i];
+                var ic = i === lvIdx;
+                var rs = l.max >= 999999 ? l.min + '+' : l.min + '\uFF5E' + l.max;
+                lvh += '<div class="level-item' + (ic ? ' current' : '') + '"><div class="lv-name">' + (ic ? '\u25B6 ' : '') + l.name + '</div><div class="lv-range">' + rs + ' XP</div></div>';
             }
-
-            users.push({
-                id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-                username: username,
-                password: password,
-                nickname: nickname,
-                avatar: '🎭',
-                role: 'member',
-                createdAt: new Date().toLocaleString(),
-                xpData: { xp: 0, checkinDates: [], consecutiveDays: 0, lastDate: '', weekCheckins: [], weekId: '' }
-            });
-            saveUsers(users);
-
-            document.getElementById('adminNewUsername').value = '';
-            document.getElementById('adminNewNickname').value = '';
-            document.getElementById('adminNewPassword').value = '';
-            msgEl.textContent = '✅ 账号 ' + username + ' 添加成功！';
-            msgEl.style.color = '#27ae60';
-            render();
-        }
-
-        function adminDeleteUser(userId, username) {
-            if (username === 'admin') {
-                document.getElementById('adminMsg').textContent = '❌ 不能删除管理员账号';
-                document.getElementById('adminMsg').style.color = '#c0392b';
-                return;
-            }
-            if (!confirm('确定要删除账号 "' + username + '" 吗？此操作不可撤销！')) return;
-
-            let users = getUsers();
-            users = users.filter(u => u.id !== userId);
-            saveUsers(users);
-
-            document.getElementById('adminMsg').textContent = '✅ 账号 ' + username + ' 已删除';
-            document.getElementById('adminMsg').style.color = '#27ae60';
-            render();
+            lg.innerHTML = lvh;
+            renderAdminPanel();
         }
 
         function renderAdminPanel() {
-            const currentUser = getCurrentUser();
-            const panel = document.getElementById('adminPanel');
-            if (!currentUser || currentUser.username !== 'admin') {
-                panel.style.display = 'none';
-                return;
-            }
+            var cu = getCurrentUser();
+            var panel = document.getElementById('adminPanel');
+            if (!cu || cu.username !== 'admin') { panel.style.display = 'none'; return; }
             panel.style.display = 'block';
-
-            const users = getUsers();
-            const tbody = document.getElementById('adminUserList');
-            let html = '';
-            users.forEach(u => {
-                const xp = (u.xpData && u.xpData.xp) || 0;
-                const isAdmin = u.role === 'admin';
-                html += '<tr>' +
-                    '<td class="name-col">' + u.username + '</td>' +
-                    '<td class="level-col">' + (u.nickname || u.username) + '</td>' +
-                    '<td class="level-col">' + (isAdmin ? '🔑 管理员' : '👤 成员') + '</td>' +
-                    '<td class="xp-col">' + xp + ' XP</td>' +
-                    '<td>' + (isAdmin ? '<span style="color:#6b5d4a;font-size:0.7rem;">不可删除</span>' : '<button onclick="adminDeleteUser(\'' + u.id + '\',\'' + u.username + '\')" style="background:none;border:1px solid #c0392b;color:#c0392b;padding:2px 10px;border-radius:4px;cursor:pointer;font-size:0.7rem;font-family:inherit;">删除</button>') + '</td>' +
-                    '</tr>';
-            });
-            tbody.innerHTML = html;
+            var tb = document.getElementById('adminUserList');
+            var h = '';
+            for (var i = 0; i < g_Users.length; i++) {
+                var u = g_Users[i];
+                var xp = (u.xpData && u.xpData.xp) || 0;
+                var ia = u.role === 'admin';
+                h += '<tr><td class="name-col">' + u.username + '</td><td class="level-col">' + (u.nickname || u.username) + '</td><td class="level-col">' + (ia ? '\uD83D\uDD11 \u7BA1\u7406\u5458' : '\uD83D\uDC64 \u6210\u5458') + '</td><td class="xp-col">' + xp + ' XP</td><td>' + (ia ? '<span style="color:#6b5d4a;font-size:0.7rem;">\u4E0D\u53EF\u5220\u9664</span>' : '<button onclick="adminDeleteUser(\'' + u.id + '\',\'' + u.username + '\')" style="background:none;border:1px solid #c0392b;color:#c0392b;padding:2px 10px;border-radius:4px;cursor:pointer;font-size:0.7rem;font-family:inherit;">\u5220\u9664</button>') + '</td></tr>';
+            }
+            tb.innerHTML = h;
         }
 
-        // ========== Init ==========
+        async function adminAddUser() {
+            var un = document.getElementById('adminNewUsername').value.trim();
+            var nn = document.getElementById('adminNewNickname').value.trim() || un;
+            var pw = document.getElementById('adminNewPassword').value.trim();
+            var msg = document.getElementById('adminMsg');
+            if (!un || !pw) { msg.textContent = '账号和密码不能为空'; msg.style.color = '#c0392b'; return; }
+            if (un.length < 2 || un.length > 20) { msg.textContent = '账号长度2-20位'; msg.style.color = '#c0392b'; return; }
+            for (var i = 0; i < g_Users.length; i++) {
+                if (g_Users[i].username === un) { msg.textContent = '账号已存在'; msg.style.color = '#c0392b'; return; }
+            }
+            g_Users.push({
+                id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+                username: un, password: pw, nickname: nn, avatar: '\uD83C\uDFAD', role: 'member',
+                createdAt: new Date().toLocaleString(),
+                xpData: { xp: 0, checkinDates: [], consecutiveDays: 0, lastDate: '', weekCheckins: [], weekId: '' }
+            });
+            await saveUsersToGitHub();
+            document.getElementById('adminNewUsername').value = '';
+            document.getElementById('adminNewNickname').value = '';
+            document.getElementById('adminNewPassword').value = '';
+            msg.textContent = '✅ ' + un + ' 添加成功'; msg.style.color = '#27ae60';
+            renderAll();
+        }
+
+        async function adminDeleteUser(uid, un) {
+            if (un === 'admin') { document.getElementById('adminMsg').textContent = '不能删除管理员'; document.getElementById('adminMsg').style.color = '#c0392b'; return; }
+            if (!confirm('确定删除 "' + un + '" 吗？')) return;
+            var newUsers = [];
+            for (var i = 0; i < g_Users.length; i++) {
+                if (g_Users[i].id !== uid) newUsers.push(g_Users[i]);
+            }
+            g_Users = newUsers;
+            await saveUsersToGitHub();
+            document.getElementById('adminMsg').textContent = '✅ ' + un + ' 已删除'; document.getElementById('adminMsg').style.color = '#27ae60';
+            renderAll();
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-            ensureAdmin();
-            render();
-            renderAdminPanel();
-        });
-    </script>
-</body>
-</html>
+            fetchUsers();
+        });</script></body></html>
