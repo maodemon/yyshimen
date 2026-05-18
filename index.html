@@ -1087,10 +1087,19 @@
             });
         });
 
-        // ========== Auth API Config ==========
-        const API_BASE = ''; // 留空则同域请求
+        // ========== 本地登录注册系统 ==========
+        const STORAGE_KEY = 'yyshimen_users';
 
-        // ========== Auth UI ==========
+        function getUsers() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
+        }
+        function saveUsers(users) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+        }
+        function genId() {
+            return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        }
+
         function showLogin() {
             document.getElementById('authOverlay').style.display = 'flex';
             switchAuthTab('login');
@@ -1109,41 +1118,18 @@
             document.getElementById('registerError').textContent = '';
         }
 
-        // Enter key support
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') closeAuth();
             if (e.key === 'Enter') {
                 const overlay = document.getElementById('authOverlay');
                 if (overlay.style.display === 'flex') {
-                    const loginTab = document.getElementById('loginTab');
-                    if (loginTab.classList.contains('active')) {
-                        handleLogin();
-                    } else {
-                        handleRegister();
-                    }
+                    document.getElementById('loginTab').classList.contains('active') ? handleLogin() : handleRegister();
                 }
             }
         });
 
-        // ========== API Calls ==========
-        async function apiFetch(path, data) {
-            const token = localStorage.getItem('token');
-            const headers = { 'Content-Type': 'application/json' };
-            if (token) headers['Authorization'] = 'Bearer ' + token;
-            const resp = await fetch(API_BASE + path, { method: 'POST', headers, body: JSON.stringify(data) });
-            return await resp.json();
-        }
-
-        async function apiGet(path) {
-            const token = localStorage.getItem('token');
-            const headers = {};
-            if (token) headers['Authorization'] = 'Bearer ' + token;
-            const resp = await fetch(API_BASE + path, { headers });
-            return await resp.json();
-        }
-
-        // ========== Login ==========
-        async function handleLogin() {
+        // ========== 登录 ==========
+        function handleLogin() {
             const username = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value;
             const errorEl = document.getElementById('loginError');
@@ -1154,24 +1140,22 @@
                 return;
             }
 
-            const btn = document.querySelector('#loginForm .auth-submit');
-            btn.disabled = true; btn.textContent = '登录中...';
-
-            const result = await apiFetch('/api/login', { username, password });
-            btn.disabled = false; btn.textContent = '登 录';
-
-            if (result.error) {
-                errorEl.textContent = result.error;
-            } else {
-                localStorage.setItem('token', result.token);
-                localStorage.setItem('user', JSON.stringify(result.user));
-                closeAuth();
-                updateAuthUI();
+            const users = getUsers();
+            const user = users.find(u => u.username === username && u.password === password);
+            if (!user) {
+                errorEl.textContent = '账号或密码错误';
+                return;
             }
+
+            localStorage.setItem('yyshimen_current_user', JSON.stringify({
+                id: user.id, username: user.username, nickname: user.nickname, avatar: user.avatar, role: user.role
+            }));
+            closeAuth();
+            updateAuthUI();
         }
 
-        // ========== Register ==========
-        async function handleRegister() {
+        // ========== 注册 ==========
+        function handleRegister() {
             const username = document.getElementById('registerUsername').value.trim();
             const nickname = document.getElementById('registerNickname').value.trim() || username;
             const password = document.getElementById('registerPassword').value;
@@ -1182,43 +1166,57 @@
                 errorEl.textContent = '账号和密码不能为空';
                 return;
             }
-
-            const btn = document.querySelector('#registerForm .auth-submit');
-            btn.disabled = true; btn.textContent = '注册中...';
-
-            const result = await apiFetch('/api/register', { username, password, nickname });
-            btn.disabled = false; btn.textContent = '注 册';
-
-            if (result.error) {
-                errorEl.textContent = result.error;
-            } else {
-                localStorage.setItem('token', result.token);
-                localStorage.setItem('user', JSON.stringify(result.user));
-                closeAuth();
-                updateAuthUI();
+            if (username.length < 2 || username.length > 20) {
+                errorEl.textContent = '账号长度需2-20位';
+                return;
             }
-        }
+            if (password.length < 4) {
+                errorEl.textContent = '密码至少4位';
+                return;
+            }
 
-        // ========== Logout ==========
-        function handleLogout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
+            const users = getUsers();
+            if (users.find(u => u.username === username)) {
+                errorEl.textContent = '账号已存在';
+                return;
+            }
+
+            const newUser = {
+                id: genId(),
+                username,
+                password,
+                nickname,
+                avatar: '🎭',
+                role: 'member',
+                createdAt: new Date().toLocaleString()
+            };
+            users.push(newUser);
+            saveUsers(users);
+
+            localStorage.setItem('yyshimen_current_user', JSON.stringify({
+                id: newUser.id, username, nickname, avatar: '🎭', role: 'member'
+            }));
+            closeAuth();
             updateAuthUI();
         }
 
-        // ========== Update Nav UI ==========
+        // ========== 退出 ==========
+        function handleLogout() {
+            localStorage.removeItem('yyshimen_current_user');
+            updateAuthUI();
+        }
+
+        // ========== 更新导航栏 ==========
         function updateAuthUI() {
             const navBtn = document.getElementById('navAuthBtn');
-            const userData = localStorage.getItem('user');
+            const userData = localStorage.getItem('yyshimen_current_user');
             if (userData) {
                 try {
                     const user = JSON.parse(userData);
                     navBtn.innerHTML = '<span class="user-badge"><span class="avatar">' + (user.avatar || '🎭') + '</span> ' + (user.nickname || user.username) + ' <button class="logout-btn" onclick="event.stopPropagation();handleLogout()">退出</button></span>';
                     navBtn.href = '#';
                     navBtn.onclick = function(e) { e.preventDefault(); };
-                } catch {
-                    localStorage.removeItem('user');
-                }
+                } catch { localStorage.removeItem('yyshimen_current_user'); updateAuthUI(); }
             } else {
                 navBtn.innerHTML = '登录';
                 navBtn.href = '#';
@@ -1226,10 +1224,7 @@
             }
         }
 
-        // ========== Check login on load ==========
-        document.addEventListener('DOMContentLoaded', function() {
-            updateAuthUI();
-        });
+        document.addEventListener('DOMContentLoaded', updateAuthUI);
     </script>
 </body>
 </html>
