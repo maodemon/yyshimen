@@ -465,63 +465,60 @@
                 g_Users = [];
             }
         async function fetchUsers() {
-            // 初始化本地备份
+            // 立刻从本地备份加载（保证秒开）
             try {
                 var bk = localStorage.getItem('yyshimen_data_backup');
-                if (!bk) {
-                    localStorage.setItem('yyshimen_data_backup', '[{"id":"admin_init","username":"admin","password":"123456","nickname":"管理员","avatar":"🔑","role":"admin","createdAt":"2026/5/18","xpData":{"xp":0,"checkinDates":[],"consecutiveDays":0,"lastDate":"","weekCheckins":[],"weekId":"","weeklyBonusWeek":""}}]');
+                if (bk) { g_Users = JSON.parse(bk); } else {
+                    // 初始化备份
+                    var initData = [{"id":"admin_init","username":"admin","password":"123456","nickname":"管理员","avatar":"🔑","role":"admin","createdAt":"2026/5/18","xpData":{"xp":0,"checkinDates":[],"consecutiveDays":0,"lastDate":"","weekCheckins":[],"weekId":"","weeklyBonusWeek":""}}];
+                    g_Users = initData;
+                    localStorage.setItem('yyshimen_data_backup', JSON.stringify(initData));
                 }
-            } catch(e) {}
-            // 先尝试从API读取，超时2秒
+            } catch(e) { g_Users = []; }
+            // 确保管理员存在
+            var ha = false;
+            for (var i = 0; i < g_Users.length; i++) { if (g_Users[i].username === 'admin') { ha = true; break; } }
+            if (!ha) {
+                g_Users.push({id:'admin_'+Date.now().toString(36),username:'admin',password:'123456',nickname:'管理员',avatar:'🔑',role:'admin',createdAt:new Date().toLocaleString(),xpData:{xp:0,checkinDates:[],consecutiveDays:0,lastDate:'',weekCheckins:[],weekId:''}});
+            }
+            // 确保当前用户存在
+            var cu = getCurrentUser();
+            if (cu) {
+                var f = false;
+                for (var i = 0; i < g_Users.length; i++) { if (g_Users[i].id === cu.id) { f = true; break; } }
+                if (!f) {
+                    g_Users.push({id:cu.id,username:cu.username,password:'local',nickname:cu.nickname||cu.username,avatar:'🎭',role:'member',createdAt:new Date().toLocaleString(),xpData:{xp:0,checkinDates:[],consecutiveDays:0,lastDate:'',weekCheckins:[],weekId:''}});
+                }
+            }
+            g_Loading = false;
+            renderAll();
+            // 后台尝试从GitHub同步（不影响页面显示）
             try {
                 var controller = new AbortController();
-                var tid = setTimeout(function(){ controller.abort(); }, 2000);
+                var tid = setTimeout(function(){ controller.abort(); }, 3000);
                 var resp = await fetch(API_URL, {
                     headers: { 'Accept': 'application/vnd.github.v3.raw' },
                     signal: controller.signal
                 });
                 clearTimeout(tid);
                 if (resp.ok) {
-                    g_Users = await resp.json();
-                    localStorage.setItem('yyshimen_data_backup', JSON.stringify(g_Users));
-                } else {
-                    throw new Error('HTTP ' + resp.status);
+                    var ghUsers = await resp.json();
+                    if (JSON.stringify(ghUsers) !== JSON.stringify(g_Users)) {
+                        g_Users = ghUsers;
+                        localStorage.setItem('yyshimen_data_backup', JSON.stringify(g_Users));
+                        // 再次确保当前用户存在
+                        var cu2 = getCurrentUser();
+                        if (cu2) {
+                            var f2 = false;
+                            for (var i = 0; i < g_Users.length; i++) { if (g_Users[i].id === cu2.id) { f2 = true; break; } }
+                            if (!f2) {
+                                g_Users.push({id:cu2.id,username:cu2.username,password:'local',nickname:cu2.nickname||cu2.username,avatar:'🎭',role:'member',createdAt:new Date().toLocaleString(),xpData:{xp:0,checkinDates:[],consecutiveDays:0,lastDate:'',weekCheckins:[],weekId:''}});
+                            }
+                        }
+                        renderAll();
+                    }
                 }
-            } catch (e) {
-                try {
-                    var bk = localStorage.getItem('yyshimen_data_backup');
-                    if (bk) { g_Users = JSON.parse(bk); } else { g_Users = []; }
-                } catch(e2) { g_Users = []; }
-            }
-            var hasAdmin = false;
-            for (var i = 0; i < g_Users.length; i++) {
-                if (g_Users[i].username === 'admin') { hasAdmin = true; break; }
-            }
-            if (!hasAdmin) {
-                g_Users.push({
-                    id: 'admin_' + Date.now().toString(36),
-                    username: 'admin', password: '123456', nickname: '管理员', avatar: '🔑',
-                    role: 'admin', createdAt: new Date().toLocaleString(),
-                    xpData: { xp: 0, checkinDates: [], consecutiveDays: 0, lastDate: '', weekCheckins: [], weekId: '' }
-                });
-            }
-            var cu = getCurrentUser();
-            if (cu) {
-                var found = false;
-                for (var i = 0; i < g_Users.length; i++) {
-                    if (g_Users[i].id === cu.id) { found = true; break; }
-                }
-                if (!found) {
-                    g_Users.push({
-                        id: cu.id, username: cu.username, password: 'local',
-                        nickname: cu.nickname || cu.username, avatar: '🎭',
-                        role: 'member', createdAt: new Date().toLocaleString(),
-                        xpData: { xp: 0, checkinDates: [], consecutiveDays: 0, lastDate: '', weekCheckins: [], weekId: '' }
-                    });
-                }
-            }
-            g_Loading = false;
-            renderAll();
+            } catch(e) {}
         }
 
         async function saveUsersToGitHub() {
