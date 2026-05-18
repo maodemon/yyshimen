@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>燕云十六声 · 凌云阁师门</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body{
+            font-family: "微软雅黑",sans-serif;
+            background: #f5f0eb;
+            line-height: 1.8;
+        }
+        header{
+            background: #8b2c2c;
+            color: #fff;
+            padding:20px 0;
+            text-align:center;
+        }
+        header h1{
+            font-size:36px;
+            letter-spacing:6px;
+        }
+        nav{
+            background: #b34545;
+            overflow: hidden;
+        }
+        nav a{
+            display:block;
+            float:left;
+            padding:14px 30px;
+            color:#fff;
+            text-decoration:none;
+            font-size:17px;
+        }
+        nav a:hover{
+            background:#8b2c2c;
+        }
+        .container{
+            width:1100px;
+            margin:30px auto;
+            background:#fff;
+            padding:30px;
+            box-shadow:0 0 8px #ddd;
+        }
+        h2{
+            color:#8b2c2c;
+            margin:20px 0 15px;
+            border-left:5px solid #d4a056;
+            padding-left:10px;
+        }
+        .intro{
+            font-size:16px;
+            color:#333;
+            margin:15px 0;
+            text-indent:2em;
+        }
+        .banner{
+            width:100%;
+            height:300px;
+            background: linear-gradient(135deg, #3d1a1a, #6b2a2a);
+            margin:20px 0;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            color:rgba(255,255,255,0.15);
+            font-size:80px;
+            letter-spacing:20px;
+            border-radius:4px;
+            position:relative;
+            overflow:hidden;
+        }
+        .banner::before{
+            content:'⚔️';
+            position:absolute;
+            font-size:40px;
+            color:rgba(212,160,86,0.2);
+            top:20px; left:30px;
+        }
+        .banner::after{
+            content:'🏮';
+            position:absolute;
+            font-size:35px;
+            color:rgba(212,160,86,0.2);
+            bottom:20px; right:30px;
+        }
+        .banner-text{
+            color:rgba(255,255,255,0.6);
+            font-size:24px;
+            letter-spacing:10px;
+            text-shadow:0 0 20px rgba(212,160,86,0.3);
+        }
+        .card-grid{
+            display:flex;
+            flex-wrap:wrap;
+            gap:20px;
+            margin:20px 0;
+        }
+        .card{
+            flex:1;
+            min-width:200px;
+            padding:20px;
+            background:#faf7f3;
+            border-radius:6px;
+            border:1px solid #eee;
+            text-align:center;
+        }
+        .card h3{
+            color:#8b2c2c;
+            margin-bottom:8px;
+        }
+        .card p{
+            color:#666;
+            font-size:14px;
+        }
+        .card .icon{
+            font-size:40px;
+            margin-bottom:10px;
+        }
+        .section-box{
+            margin:20px 0;
+            padding:20px;
+            background:#faf7f3;
+            border-radius:6px;
+            border-left:4px solid #b34545;
+        }
+        .section-box h3{
+            color:#8b2c2c;
+            margin-bottom:8px;
+        }
+        .section-box p{
+            color:#555;
+            font-size:15px;
+            text-indent:2em;
+        }
+        .member-list{
+            display:flex;
+            flex-wrap:wrap;
+            gap:15px;
+            margin:15px 0;
+        }
+        .member-item{
+            flex:1;
+            min-width:180px;
+            padding:15px;
+            background:#faf7f3;
+            border-radius:6px;
+            text-align:center;
+            border:1px solid #eee;
+        }
+        .member-item .avatar{
+            font-size:36px;
+            margin-bottom:5px;
+        }
+        .member-item h4{
+            color:#8b2c2c;
+        }
+        .member-item p{
+            color:#888;
+            font-size:13px;
+        }
+        .footer{
+            background:#8b2c2c;
+            color:#fff;
+            text-align:center;
+            padding:15px;
+            margin-top:30px;
+            font-size:14px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>燕云十六声 · 凌云阁</h1>
+        <p>剑气凌云 · 心系苍生</p>
+    </header>
+    <nav>
+        <a href="#top">师门首页</a>
+        <a href="#intro">师门简介</a>
+        <a href="#baiye">百业堂</a>
+        <a href="#members">门人风采</a>
+        <a href="#skills">功法绝学</a>
+        <a href="#join">加入师门</a>
+    </nav>
+
+    <div class="container" id="top">
+        <div class="banner">
+            <span class="banner-text">燕云十六声</span>
+        </div>
+
+        <h2>凌云阁 · 师门简介</h2>
+        <p class="intro" id="intro">
+            凌云阁立于雁回山巅，是《燕云十六声》中一代武林名门。师门以剑法闻名，兼修百艺。门人皆以"剑气凌云，心系苍生"为训，传承百载，历经风雨而不倒，于乱世之中守一方安宁。
+        </p>
+        <p class="intro">
+            师门不独尚武，更重修身养性。弟子入门，先习心法三年，明心见性后方可习武。师门主张"武以载道"，不争强斗狠，而以武会友，以武修身。现任掌门云中君，剑术通神，更通音律书画，乃当世罕见之全才。
+        </p>
+        <p class="intro">
+            凌云阁门下弟子遍布天下，或行侠仗义，或悬壶济世，各展所长。师门百业堂下设有剑术、弓道、茶艺、音律、岐黄、锻造、书画、弈棋等十二门功课，弟子可择其所长修习。
+        </p>
+
+        <h2 id="baiye">百业堂 · 十二门艺</h2>
+        <div class="card-grid">
+            <div class="card">
+                <div class="icon">⚔️</div>
+                <h3>剑术</h3>
+                <p>凌云剑法，天下无双。以意御剑，以气行招。</p>
+            </div>
+            <div class="card">
+                <div class="icon">🏹</div>
+                <h3>弓道</h3>
+                <p>百步穿杨，箭无虚发。静心凝神，一箭破空。</p>
+            </div>
+            <div class="card">
+                <div class="icon">🍵</div>
+                <h3>茶艺</h3>
+                <p>一壶天地，品悟人生。以茶入道，清心明性。</p>
+            </div>
+            <div class="card">
+                <div class="icon">🎵</div>
+                <h3>音律</h3>
+                <p>琴箫和鸣，以音入道。一曲广陵散，可退百万兵。</p>
+            </div>
+            <div class="card">
+                <div class="icon">💊</div>
+                <h3>岐黄</h3>
+                <p>悬壶济世，妙手回春。青木药典，活人无数。</p>
+            </div>
+            <div class="card">
+                <div class="icon">🔨</div>
+                <h3>锻造</h3>
+                <p>千锤百炼，铸就神兵。以天地为炉，以心火为引。</p>
+            </div>
+            <div class="card">
+                <div class="icon">🖌️</div>
+                <h3>书画</h3>
+                <p>笔墨丹青，写意山河。水墨身法，脱胎于此。</p>
+            </div>
+            <div class="card">
+                <div class="icon">♟️</div>
+                <h3>弈棋</h3>
+                <p>黑白纵横，运筹帷幄。方寸之间，可窥天下。</p>
+            </div>
+            <div class="card">
+                <div class="icon">🌸</div>
+                <h3>花道</h3>
+                <p>一花一世界，一叶一菩提。拈花一笑，禅意自生。</p>
+            </div>
+            <div class="card">
+                <div class="icon">📿</div>
+                <h3>禅修</h3>
+                <p>明心见性，顿悟真我。静坐观心，万法皆空。</p>
+            </div>
+            <div class="card">
+                <div class="icon">🐉</div>
+                <h3>术法</h3>
+                <p>通晓阴阳，参悟玄机。天地之气，为我所用。</p>
+            </div>
+            <div class="card">
+                <div class="icon">📜</div>
+                <h3>典籍</h3>
+                <p>博览群书，知古鉴今。万卷藏书，皆在胸中。</p>
+            </div>
+        </div>
+
+        <h2 id="members">门人风采</h2>
+        <div class="member-list">
+            <div class="member-item">
+                <div class="avatar">☁️</div>
+                <h4>云中君</h4>
+                <p>掌门 · 剑术通神</p>
+                <p style="color:#999;font-size:12px;margin-top:5px;">性情淡泊，以"守正"立身</p>
+            </div>
+            <div class="member-item">
+                <div class="avatar">🌙</div>
+                <h4>月清尘</h4>
+                <p>大弟子 · 琴剑双绝</p>
+                <p style="color:#999;font-size:12px;margin-top:5px;">一曲广陵散，可退千军</p>
+            </div>
+            <div class="member-item">
+                <div class="avatar">🌿</div>
+                <h4>青木</h4>
+                <p>百业堂堂主 · 岐黄圣手</p>
+                <p style="color:#999;font-size:12px;margin-top:5px;">精研医术二十载</p>
+            </div>
+            <div class="member-item">
+                <div class="avatar">🔥</div>
+                <h4>赤云</h4>
+                <p>铸剑师 · 铁骨匠心</p>
+                <p style="color:#999;font-size:12px;margin-top:5px;">所铸之剑皆非凡品</p>
+            </div>
+            <div class="member-item">
+                <div class="avatar">📖</div>
+                <h4>墨言</h4>
+                <p>藏书阁主 · 博古通今</p>
+                <p style="color:#999;font-size:12px;margin-top:5px;">门下皆称"活典籍"</p>
+            </div>
+            <div class="member-item">
+                <div class="avatar">🍃</div>
+                <h4>竹心</h4>
+                <p>入门弟子 · 后起之秀</p>
+                <p style="color:#999;font-size:12px;margin-top:5px;">掌门赞为"百年一遇"</p>
+            </div>
+        </div>
+
+        <h2 id="skills">师门功法绝学</h2>
+        <div class="section-box">
+            <h3>壹 · 凌云剑法（基础式）</h3>
+            <p>入门第一课。看似简单，实则蕴含万千变化。讲究"以意御剑，以气行招"，是凌云阁所有剑法之根基。</p>
+        </div>
+        <div class="section-box">
+            <h3>贰 · 雁回九式</h3>
+            <p>凌云阁镇派剑法。取雁回山云海翻涌之意，九式连环，一气呵成，乃历代掌门心血所凝。</p>
+        </div>
+        <div class="section-box">
+            <h3>叁 · 青木养气诀</h3>
+            <p>内功心法。取草木生生不息之意，疗伤养气，固本培元。师门弟子必修之内功心法。</p>
+        </div>
+        <div class="section-box">
+            <h3>肆 · 琴心剑魄</h3>
+            <p>以音律入剑道的独门绝学。琴音所至，剑意随行。非大彻大悟者不能习之，乃月清尘独创。</p>
+        </div>
+        <div class="section-box">
+            <h3>伍 · 水墨身法</h3>
+            <p>脱胎于书画的身法。如墨落宣纸，飘忽不定。进退之间，尽显潇洒。</p>
+        </div>
+        <div class="section-box">
+            <h3>陆 · 天地一炉</h3>
+            <p>锻造心法。以天地为炉，以心火为引。铸剑亦是铸心，赤云铸剑师之绝学。</p>
+        </div>
+
+        <h2 id="join">加入师门</h2>
+        <p class="intro">
+            凌云阁山门常开，不论出身，不问来路。凡心诚意坚者，皆可拜入凌云阁门下。有意者可前往雁回山凌云阁参加入门考核，通过者即为凌云阁记名弟子。
+        </p>
+        <p class="intro">
+            入门后先修习心法三年，明心见性后择百业之一专精修习。师门每月初一、十五开坛讲武，每季举行一次论剑大会。优秀弟子可获掌门亲传，习得镇派绝学。
+        </p>
+        <p style="text-align:center;margin:30px 0;">
+            <span style="display:inline-block;background:#8b2c2c;color:#fff;padding:12px 40px;border-radius:4px;font-size:16px;cursor:pointer;" onclick="alert('凌云阁山门常开，恭候君至！')">拜入师门</span>
+        </p>
+
+        <h2>师门传承纪年</h2>
+        <div class="section-box">
+            <h3>天禧二年 · 开山立派</h3>
+            <p>凌云阁祖师云逸子在雁回山创立师门，以剑法传世。初代弟子仅七人，号"凌云七子"。</p>
+        </div>
+        <div class="section-box">
+            <h3>天圣五年 · 百业兴盛</h3>
+            <p>第二代掌门谢长风扩师门规制，立百业堂。茶、药、琴、棋、书、画六艺入武，师门声望日隆。</p>
+        </div>
+        <div class="section-box">
+            <h3>熙宁三年 · 江湖会盟</h3>
+            <p>凌云阁发起"雁回论剑"，邀天下英杰会于雁回山巅。自此每三年一届，成江湖盛事。</p>
+        </div>
+        <div class="section-box">
+            <h3>建炎元年 · 乱世守道</h3>
+            <p>金兵南下，凌云阁开山门收容难民，以医术济世。掌门亲率弟子护一方百姓周全。</p>
+        </div>
+        <div class="section-box">
+            <h3>至今 · 薪火相传</h3>
+            <p>凌云阁门人遍及天下，以"剑气凌云，心系苍生"为训，传承不辍，薪火相继。</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>© 燕云十六声 · 凌云阁 | 剑气凌云 · 心系苍生</p>
+        <p style="color:rgba(255,255,255,0.5);margin-top:5px;">本网站为粉丝作品，非官方出品</p>
+    </div>
+</body>
+</html>
