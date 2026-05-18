@@ -780,17 +780,11 @@
         }
 
         // ========== Init ==========
-        ensureAdmin();
         document.addEventListener('DOMContentLoaded', function() {
+            ensureAdmin();
             render();
-        });
-
-        // Patch render to include admin panel
-        var originalRender = render;
-        render = function() {
-            originalRender();
             renderAdminPanel();
-        };
+        });
     </script>
 </body>
 </html>
