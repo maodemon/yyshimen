@@ -443,7 +443,7 @@
         }
 
         // ========== GitHub API ==========
-        const GITHUB_TOKEN = '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';
+        const GITHUB_TOKEN = '';
         const REPO_OWNER = 'maodemon';
         const REPO_NAME = 'yyshimen';
         const FILE_PATH = 'data/users.json';
@@ -492,21 +492,17 @@
             }
             g_Loading = false;
             renderAll();
-            // 后台尝试从GitHub同步（不影响页面显示）
+            // 后台尝试从同步服务器获取最新数据（多设备共享排行榜）
             try {
                 var controller = new AbortController();
-                var tid = setTimeout(function(){ controller.abort(); }, 3000);
-                var resp = await fetch(API_URL, {
-                    headers: { 'Accept': 'application/vnd.github.v3.raw' },
-                    signal: controller.signal
-                });
+                var tid = setTimeout(function(){ controller.abort(); }, 2000);
+                var resp = await fetch(SYNC_URL, { signal: controller.signal });
                 clearTimeout(tid);
                 if (resp.ok) {
-                    var ghUsers = await resp.json();
-                    if (JSON.stringify(ghUsers) !== JSON.stringify(g_Users)) {
-                        g_Users = ghUsers;
+                    var svUsers = await resp.json();
+                    if (JSON.stringify(svUsers) !== JSON.stringify(g_Users)) {
+                        g_Users = svUsers;
                         localStorage.setItem('yyshimen_data_backup', JSON.stringify(g_Users));
-                        // 再次确保当前用户存在
                         var cu2 = getCurrentUser();
                         if (cu2) {
                             var f2 = false;
@@ -521,44 +517,25 @@
             } catch(e) {}
         }
 
-        async function saveUsersToGitHub() {
+                async function saveUsersToGitHub() {
             try {
-                var sha = '';
-                var getResp = await fetch(API_URL, {
-                    headers: { 'Authorization': 'Bearer ' + GITHUB_TOKEN }
+                var controller = new AbortController();
+                var tid = setTimeout(function(){ controller.abort(); }, 2000);
+                var resp = await fetch(SYNC_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(g_Users),
+                    signal: controller.signal
                 });
-                if (getResp.ok) {
-                    var d = await getResp.json();
-                    sha = d.sha;
-                }
-                var enc = [];
-                var jsonStr = JSON.stringify(g_Users, null, 2);
-                for (var i = 0; i < jsonStr.length; i++) {
-                    enc.push(jsonStr.charCodeAt(i));
-                }
-                var content = btoa(String.fromCharCode.apply(null, enc));
-                var putResp = await fetch(API_URL, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': 'Bearer ' + GITHUB_TOKEN,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: '签到更新 ' + today(),
-                        content: content,
-                        sha: sha || undefined
-                    })
-                });
-                if (!putResp.ok) {
-                    var errText = await putResp.text();
-                    showToast('\u26A0\uFE0F \u6570\u636E\u540C\u6B65\u5931\u8D25\uFF0C\u8BF7\u5237\u65B0\u91CD\u8BD5');
+                clearTimeout(tid);
+                if (resp.ok) {
+                    localStorage.setItem('yyshimen_data_backup', JSON.stringify(g_Users));
                 }
             } catch (e) {
-                showToast('\u26A0\uFE0F \u7F51\u7EDC\u5F02\u5E38\uFF0C\u6570\u636E\u53EF\u80FD\u672A\u4FDD\u5B58');
+                localStorage.setItem('yyshimen_data_backup', JSON.stringify(g_Users));
             }
         }
-
-        async function doCheckin() {
+async function doCheckin() {
             var cu = getCurrentUser();
             if (!cu) { window.location.href = 'https://maodemon.github.io/yyshimen/'; return; }
             var idx = -1;
