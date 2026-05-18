@@ -362,6 +362,27 @@
             <div class="section-title">摸鱼等级大全</div>
             <div class="level-grid" id="levelGrid"></div>
         </div>
+
+        <!-- Admin Panel (only visible to admin) -->
+        <div class="section-card" id="adminPanel" style="display:none;">
+            <div class="section-title">🔑 管理员面板 · 账号管理</div>
+
+            <div style="margin-bottom:1rem;">
+                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+                    <input type="text" id="adminNewUsername" placeholder="新账号" style="flex:1;min-width:120px;padding:0.6rem 0.8rem;background:rgba(26,21,16,0.4);border:1px solid rgba(139,115,85,0.2);border-radius:4px;color:#d4c9a8;font-family:inherit;outline:none;">
+                    <input type="text" id="adminNewNickname" placeholder="昵称" style="flex:1;min-width:120px;padding:0.6rem 0.8rem;background:rgba(26,21,16,0.4);border:1px solid rgba(139,115,85,0.2);border-radius:4px;color:#d4c9a8;font-family:inherit;outline:none;">
+                    <input type="password" id="adminNewPassword" placeholder="密码" style="flex:1;min-width:120px;padding:0.6rem 0.8rem;background:rgba(26,21,16,0.4);border:1px solid rgba(139,115,85,0.2);border-radius:4px;color:#d4c9a8;font-family:inherit;outline:none;">
+                    <button onclick="adminAddUser()" style="padding:0.6rem 1.2rem;background:#8b7355;border:none;border-radius:4px;color:#fff;cursor:pointer;font-family:inherit;">添加账号</button>
+                </div>
+                <div id="adminMsg" style="font-size:0.75rem;color:#6b5d4a;min-height:1.2rem;"></div>
+            </div>
+
+            <table class="lb-table">
+                <thead><tr><th>账号</th><th>昵称</th><th>角色</th><th>经验</th><th>操作</th></tr></thead>
+                <tbody id="adminUserList"></tbody>
+            </table>
+        </div>
+
     </div>
 
     <script>
@@ -651,8 +672,125 @@
             lvGrid.innerHTML = lvHtml;
         }
 
+        // ========== 管理员系统 ==========
+        const ADMIN_CRED = { username: 'admin', password: '123456' };
+
+        function ensureAdmin() {
+            let users = getUsers();
+            if (!users.find(u => u.username === 'admin')) {
+                users.push({
+                    id: 'admin_' + Date.now().toString(36),
+                    username: 'admin',
+                    password: '123456',
+                    nickname: '管理员',
+                    avatar: '🔑',
+                    role: 'admin',
+                    createdAt: new Date().toLocaleString(),
+                    xpData: { xp: 0, checkinDates: [], consecutiveDays: 0, lastDate: '', weekCheckins: [], weekId: '' }
+                });
+                saveUsers(users);
+            }
+        }
+
+        function adminAddUser() {
+            const username = document.getElementById('adminNewUsername').value.trim();
+            const nickname = document.getElementById('adminNewNickname').value.trim() || username;
+            const password = document.getElementById('adminNewPassword').value.trim();
+            const msgEl = document.getElementById('adminMsg');
+
+            if (!username || !password) {
+                msgEl.textContent = '❌ 账号和密码不能为空';
+                msgEl.style.color = '#c0392b';
+                return;
+            }
+            if (username.length < 2 || username.length > 20) {
+                msgEl.textContent = '❌ 账号长度需2-20位';
+                msgEl.style.color = '#c0392b';
+                return;
+            }
+
+            const users = getUsers();
+            if (users.find(u => u.username === username)) {
+                msgEl.textContent = '❌ 账号已存在';
+                msgEl.style.color = '#c0392b';
+                return;
+            }
+
+            users.push({
+                id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+                username: username,
+                password: password,
+                nickname: nickname,
+                avatar: '🎭',
+                role: 'member',
+                createdAt: new Date().toLocaleString(),
+                xpData: { xp: 0, checkinDates: [], consecutiveDays: 0, lastDate: '', weekCheckins: [], weekId: '' }
+            });
+            saveUsers(users);
+
+            document.getElementById('adminNewUsername').value = '';
+            document.getElementById('adminNewNickname').value = '';
+            document.getElementById('adminNewPassword').value = '';
+            msgEl.textContent = '✅ 账号 ' + username + ' 添加成功！';
+            msgEl.style.color = '#27ae60';
+            render();
+        }
+
+        function adminDeleteUser(userId, username) {
+            if (username === 'admin') {
+                document.getElementById('adminMsg').textContent = '❌ 不能删除管理员账号';
+                document.getElementById('adminMsg').style.color = '#c0392b';
+                return;
+            }
+            if (!confirm('确定要删除账号 "' + username + '" 吗？此操作不可撤销！')) return;
+
+            let users = getUsers();
+            users = users.filter(u => u.id !== userId);
+            saveUsers(users);
+
+            document.getElementById('adminMsg').textContent = '✅ 账号 ' + username + ' 已删除';
+            document.getElementById('adminMsg').style.color = '#27ae60';
+            render();
+        }
+
+        function renderAdminPanel() {
+            const currentUser = getCurrentUser();
+            const panel = document.getElementById('adminPanel');
+            if (!currentUser || currentUser.username !== 'admin') {
+                panel.style.display = 'none';
+                return;
+            }
+            panel.style.display = 'block';
+
+            const users = getUsers();
+            const tbody = document.getElementById('adminUserList');
+            let html = '';
+            users.forEach(u => {
+                const xp = (u.xpData && u.xpData.xp) || 0;
+                const isAdmin = u.role === 'admin';
+                html += '<tr>' +
+                    '<td class="name-col">' + u.username + '</td>' +
+                    '<td class="level-col">' + (u.nickname || u.username) + '</td>' +
+                    '<td class="level-col">' + (isAdmin ? '🔑 管理员' : '👤 成员') + '</td>' +
+                    '<td class="xp-col">' + xp + ' XP</td>' +
+                    '<td>' + (isAdmin ? '<span style="color:#6b5d4a;font-size:0.7rem;">不可删除</span>' : '<button onclick="adminDeleteUser(\'' + u.id + '\',\'' + u.username + '\')" style="background:none;border:1px solid #c0392b;color:#c0392b;padding:2px 10px;border-radius:4px;cursor:pointer;font-size:0.7rem;font-family:inherit;">删除</button>') + '</td>' +
+                    '</tr>';
+            });
+            tbody.innerHTML = html;
+        }
+
         // ========== Init ==========
-        document.addEventListener('DOMContentLoaded', render);
+        ensureAdmin();
+        document.addEventListener('DOMContentLoaded', function() {
+            render();
+        });
+
+        // Patch render to include admin panel
+        var originalRender = render;
+        render = function() {
+            originalRender();
+            renderAdminPanel();
+        };
     </script>
 </body>
 </html>

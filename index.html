@@ -1089,6 +1089,7 @@
 
         // ========== 本地登录注册系统 ==========
         const STORAGE_KEY = 'yyshimen_users';
+        const ADMIN_USER = { username: 'admin', password: '123456', nickname: '管理员', avatar: '🔑', role: 'admin' };
 
         function getUsers() {
             try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
@@ -1098,6 +1099,22 @@
         }
         function genId() {
             return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        }
+        function ensureAdmin() {
+            let users = getUsers();
+            if (!users.find(u => u.username === 'admin')) {
+                users.push({
+                    id: 'admin_' + genId(),
+                    username: 'admin',
+                    password: '123456',
+                    nickname: '管理员',
+                    avatar: '🔑',
+                    role: 'admin',
+                    createdAt: new Date().toLocaleString(),
+                    xpData: { xp: 0, checkinDates: [], consecutiveDays: 0, lastDate: '', weekCheckins: [], weekId: '' }
+                });
+                saveUsers(users);
+            }
         }
 
         function showLogin() {
@@ -1217,7 +1234,8 @@
             if (userData) {
                 try {
                     const user = JSON.parse(userData);
-                    navBtn.innerHTML = '<span class="user-badge"><span class="avatar">' + (user.avatar || '🎭') + '</span> ' + (user.nickname || user.username) + ' <a href="dashboard.html" style="color:#8b7355;text-decoration:none;margin:0 6px;font-size:0.75rem;">签到</a><button class="logout-btn" onclick="event.stopPropagation();handleLogout()">退出</button></span>';
+                    var adminLink = user.role === 'admin' ? '<a href="dashboard.html" style="color:#d4a056;text-decoration:none;margin:0 4px;font-size:0.75rem;">⚙️管理</a>' : '';
+                    navBtn.innerHTML = '<span class="user-badge"><span class="avatar">' + (user.avatar || '🎭') + '</span> ' + (user.nickname || user.username) + ' ' + adminLink + '<a href="dashboard.html" style="color:#8b7355;text-decoration:none;margin:0 4px;font-size:0.75rem;">签到</a><button class="logout-btn" onclick="event.stopPropagation();handleLogout()">退出</button></span>';
                     navBtn.href = '#';
                     navBtn.onclick = function(e) { e.preventDefault(); };
                 } catch { localStorage.removeItem('yyshimen_current_user'); updateAuthUI(); }
@@ -1227,6 +1245,9 @@
                 navBtn.onclick = function(e) { e.preventDefault(); showLogin(); };
             }
         }
+
+        // 确保管理员账号存在
+        ensureAdmin();
 
         document.addEventListener('DOMContentLoaded', updateAuthUI);
     </script>
