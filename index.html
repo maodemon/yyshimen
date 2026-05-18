@@ -1152,6 +1152,8 @@
             }));
             closeAuth();
             updateAuthUI();
+            // 跳转到签到页
+            window.location.href = 'https://maodemon.github.io/yyshimen/dashboard.html';
         }
 
         // ========== 注册 ==========
@@ -1198,6 +1200,8 @@
             }));
             closeAuth();
             updateAuthUI();
+            // 跳转到签到页
+            window.location.href = 'https://maodemon.github.io/yyshimen/dashboard.html';
         }
 
         // ========== 退出 ==========
@@ -1213,7 +1217,7 @@
             if (userData) {
                 try {
                     const user = JSON.parse(userData);
-                    navBtn.innerHTML = '<span class="user-badge"><span class="avatar">' + (user.avatar || '🎭') + '</span> ' + (user.nickname || user.username) + ' <button class="logout-btn" onclick="event.stopPropagation();handleLogout()">退出</button></span>';
+                    navBtn.innerHTML = '<span class="user-badge"><span class="avatar">' + (user.avatar || '🎭') + '</span> ' + (user.nickname || user.username) + ' <a href="dashboard.html" style="color:#8b7355;text-decoration:none;margin:0 6px;font-size:0.75rem;">签到</a><button class="logout-btn" onclick="event.stopPropagation();handleLogout()">退出</button></span>';
                     navBtn.href = '#';
                     navBtn.onclick = function(e) { e.preventDefault(); };
                 } catch { localStorage.removeItem('yyshimen_current_user'); updateAuthUI(); }

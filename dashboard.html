@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>签到 · 燕云摸鱼办</title>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Serif SC', 'SimSun', 'STSong', serif;
+            background: #362b22;
+            color: #d4c9a8;
+            line-height: 1.8;
+            min-height: 100vh;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #362b22; }
+        ::-webkit-scrollbar-thumb { background: #8b7355; border-radius: 3px; }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(139,115,85,0.15);
+        }
+        .top-bar .logo { font-size: 1.1rem; color: #d4c9a8; }
+        .top-bar .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+        .top-bar .nav-links a {
+            color: #8b7355; text-decoration: none; font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+        .top-bar .nav-links a:hover { color: #d4c9a8; }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        /* User header card */
+        .user-card {
+            background: linear-gradient(135deg, #44382c, #2d241c);
+            border: 1px solid rgba(139,115,85,0.2);
+            border-radius: 8px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        .user-card .avatar {
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            background: #2d241c;
+            border: 2px solid rgba(139,115,85,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+        .user-card .info { flex: 1; }
+        .user-card .info .name { font-size: 1.2rem; color: #d4c9a8; }
+        .user-card .info .level { font-size: 0.8rem; color: #8b7355; margin-top: 2px; }
+        .user-card .info .xp-text { font-size: 0.75rem; color: #6b5d4a; margin-top: 2px; }
+        .user-card .stats {
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .user-card .stats .num { font-size: 1.5rem; color: #d4c9a8; }
+        .user-card .stats .label { font-size: 0.7rem; color: #6b5d4a; }
+
+        /* Sections */
+        .section-card {
+            background: rgba(26,21,16,0.3);
+            border: 1px solid rgba(139,115,85,0.12);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .section-title {
+            font-size: 1rem;
+            color: #d4c9a8;
+            margin-bottom: 1rem;
+            border-left: 3px solid rgba(139,115,85,0.4);
+            padding-left: 10px;
+        }
+
+        /* Check-in button */
+        .checkin-area {
+            text-align: center;
+            padding: 2rem;
+        }
+        .checkin-btn {
+            display: inline-block;
+            padding: 1rem 3rem;
+            border: 1px solid #8b7355;
+            color: #d4c9a8;
+            background: transparent;
+            font-size: 1.1rem;
+            letter-spacing: 0.3em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+            border-radius: 4px;
+        }
+        .checkin-btn:hover { background: rgba(139,115,85,0.15); }
+        .checkin-btn.done {
+            background: rgba(139,115,85,0.15);
+            color: #6b5d4a;
+            cursor: default;
+            border-color: rgba(139,115,85,0.2);
+        }
+        .checkin-btn.done:hover { background: rgba(139,115,85,0.15); }
+
+        .checkin-info {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: #8b7355;
+        }
+        .checkin-info span { color: #d4c9a8; }
+
+        /* XP Bar */
+        .xp-bar-bg {
+            width: 100%;
+            height: 10px;
+            background: rgba(26,21,16,0.6);
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 0.5rem 0 0.3rem;
+        }
+        .xp-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #8b7355, #d4c9a8);
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+        .xp-bar-label {
+            font-size: 0.7rem;
+            color: #6b5d4a;
+            text-align: right;
+        }
+
+        /* Streak bonus */
+        .streak-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 0.5rem;
+        }
+        .streak-item {
+            text-align: center;
+            padding: 0.5rem;
+            border: 1px solid rgba(139,115,85,0.12);
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+        .streak-item .day { color: #8b7355; }
+        .streak-item .bonus { color: #d4c9a8; margin-top: 2px; }
+        .streak-item.highlight {
+            border-color: rgba(139,115,85,0.4);
+            background: rgba(139,115,85,0.08);
+        }
+
+        /* Leaderboard */
+        .lb-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .lb-table th {
+            text-align: left;
+            font-size: 0.7rem;
+            color: #6b5d4a;
+            padding: 0.4rem 0.5rem;
+            border-bottom: 1px solid rgba(139,115,85,0.1);
+        }
+        .lb-table td {
+            padding: 0.5rem;
+            font-size: 0.8rem;
+            border-bottom: 1px solid rgba(139,115,85,0.06);
+        }
+        .lb-table .rank {
+            width: 30px;
+            color: #8b7355;
+            text-align: center;
+        }
+        .lb-table .rank.gold { color: #ffd700; }
+        .lb-table .rank.silver { color: #c0c0c0; }
+        .lb-table .rank.bronze { color: #cd7f32; }
+        .lb-table .name-col { color: #d4c9a8; }
+        .lb-table .xp-col { color: #8b7355; text-align: right; }
+        .lb-table .level-col { color: #6b5d4a; font-size: 0.7rem; }
+        .lb-table tr.current-user td {
+            background: rgba(139,115,85,0.08);
+        }
+        .lb-title-tag {
+            font-size: 0.7rem;
+            color: #ffd700;
+            margin-left: 6px;
+        }
+
+        /* Level list */
+        .level-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 0.4rem;
+        }
+        .level-item {
+            padding: 0.5rem 0.7rem;
+            border: 1px solid rgba(139,115,85,0.1);
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+        .level-item .lv-name { color: #d4c9a8; }
+        .level-item .lv-range { color: #6b5d4a; font-size: 0.65rem; }
+        .level-item.current {
+            border-color: rgba(139,115,85,0.4);
+            background: rgba(139,115,85,0.1);
+        }
+
+        .streak-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.8rem;
+        }
+        .streak-dot {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            border: 1px solid rgba(139,115,85,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            color: #6b5d4a;
+        }
+        .streak-dot.active {
+            border-color: #8b7355;
+            background: rgba(139,115,85,0.2);
+            color: #d4c9a8;
+        }
+        .streak-dot.bonus {
+            border-color: #d4c9a8;
+            background: rgba(212,201,168,0.15);
+            color: #d4c9a8;
+        }
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #44382c, #55483a);
+            border: 1px solid rgba(139,115,85,0.3);
+            border-radius: 8px;
+            padding: 1rem 2rem;
+            color: #d4c9a8;
+            font-size: 0.9rem;
+            z-index: 9999;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            text-align: center;
+        }
+        .toast.show { opacity: 1; }
+        .toast .big { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+
+        .back-btn {
+            display: inline-block;
+            color: #8b7355;
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: color 0.2s;
+        }
+        .back-btn:hover { color: #d4c9a8; }
+    </style>
+</head>
+<body>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <a href="https://maodemon.github.io/yyshimen/" class="back-btn">← 返回首页</a>
+        <div class="logo">🐟 燕云摸鱼办 · 签到</div>
+        <ul class="nav-links">
+            <li><a href="https://maodemon.github.io/yyshimen/#intro">师门</a></li>
+            <li><a href="https://maodemon.github.io/yyshimen/#members">门人</a></li>
+            <li><a href="https://maodemon.github.io/yyshimen/#skills">功法</a></li>
+        </ul>
+    </div>
+
+    <div class="container" id="app">
+
+        <!-- User card -->
+        <div class="user-card" id="userCard">
+            <div class="avatar" id="userAvatar">🎭</div>
+            <div class="info">
+                <div class="name" id="userName">加载中...</div>
+                <div class="level" id="userLevel">-</div>
+                <div class="xp-text" id="userXpText">经验: 0</div>
+            </div>
+            <div class="stats">
+                <div class="num" id="streakNum">0</div>
+                <div class="label">连续签到</div>
+            </div>
+        </div>
+
+        <!-- Check-in -->
+        <div class="section-card">
+            <div class="checkin-area">
+                <button class="checkin-btn" id="checkinBtn" onclick="doCheckin()">📌 签 到</button>
+                <div class="checkin-info">
+                    <div>今日已签: <span id="todayDone">否</span></div>
+                    <div>本周签到: <span id="weekCount">0</span>/7 天</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- XP Bar -->
+        <div class="section-card">
+            <div class="section-title">经验进度</div>
+            <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:#6b5d4a;">
+                <span id="currentLevelName">-</span>
+                <span id="nextLevelName">-</span>
+            </div>
+            <div class="xp-bar-bg">
+                <div class="xp-bar-fill" id="xpBar" style="width:0%"></div>
+            </div>
+            <div class="xp-bar-label" id="xpBarLabel">0 / 0</div>
+        </div>
+
+        <!-- 7-day streak bar -->
+        <div class="section-card">
+            <div class="section-title">本周签到进度</div>
+            <div class="streak-bar" id="weekStreak"></div>
+        </div>
+
+        <!-- Streak Bonus -->
+        <div class="section-card">
+            <div class="section-title">连续签到奖励</div>
+            <div class="streak-grid" id="streakBonusGrid"></div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="section-card" id="lbSection">
+            <div class="section-title">🐟 摸鱼王者周榜 <span style="font-size:0.65rem;color:#6b5d4a;">满7天获「一周鱼王」称号(+30XP)</span></div>
+            <table class="lb-table" id="lbTable">
+                <thead><tr><th></th><th>摸鱼仙人</th><th>等级</th><th>经验</th></tr></thead>
+                <tbody id="lbBody"></tbody>
+            </table>
+        </div>
+
+        <!-- All levels -->
+        <div class="section-card">
+            <div class="section-title">摸鱼等级大全</div>
+            <div class="level-grid" id="levelGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        // ========== Config ==========
+        const LEVELS = [
+            { name: '摸鱼幼苗', min: 0, max: 20 },
+            { name: '键盘养心丸', min: 20, max: 50 },
+            { name: '厕所沉思者', min: 50, max: 100 },
+            { name: '会议云游仙', min: 100, max: 180 },
+            { name: '拖延圣体', min: 180, max: 280 },
+            { name: '糊弄学硕士', min: 280, max: 400 },
+            { name: '带薪光合作用', min: 400, max: 550 },
+            { name: '假装加班暗卫', min: 550, max: 720 },
+            { name: '午睡真君', min: 720, max: 920 },
+            { name: '闲散真人(掌门亲传)', min: 920, max: 1150 },
+            { name: '时间折叠者', min: 1150, max: 1420 },
+            { name: '反内耗天尊', min: 1420, max: 1730 },
+            { name: '摸鱼办主任(副)', min: 1730, max: 2080 },
+            { name: '云上逍遥客', min: 2080, max: 2480 },
+            { name: '飞升真摸鱼圣人', min: 2480, max: 999999 }
+        ];
+        const STREAK_BONUSES = [
+            { day: 3, bonus: 5 },
+            { day: 5, bonus: 10 },
+            { day: 7, bonus: 15 },
+            { day: 10, bonus: 20 },
+            { day: 15, bonus: 30 },
+            { day: 20, bonus: 40 },
+            { day: 30, bonus: 50 }
+        ];
+        const STORAGE_KEY = 'yyshimen_users';
+        const DAILY_XP = 10;
+        const WEEKLY_BONUS_XP = 30;
+
+        // ========== Helpers ==========
+        function today() {
+            return new Date().toISOString().slice(0, 10);
+        }
+        function getWeekId() {
+            const d = new Date();
+            const start = new Date(d);
+            start.setDate(d.getDate() - d.getDay() + (d.getDay() === 0 ? -6 : 1));
+            return start.toISOString().slice(0, 10);
+        }
+        function getUsers() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
+        }
+        function saveUsers(users) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+        }
+        function getCurrentUser() {
+            try { return JSON.parse(localStorage.getItem('yyshimen_current_user')); } catch { return null; }
+        }
+
+        function getLevel(xp) {
+            let lv = LEVELS[0];
+            for (const l of LEVELS) {
+                if (xp >= l.min) lv = l;
+            }
+            return lv;
+        }
+        function getLevelIndex(xp) {
+            let idx = 0;
+            for (let i = 0; i < LEVELS.length; i++) {
+                if (xp >= LEVELS[i].min) idx = i;
+            }
+            return idx;
+        }
+
+        // ========== Check-in ==========
+        function doCheckin() {
+            const currentUser = getCurrentUser();
+            if (!currentUser) { window.location.href = 'https://maodemon.github.io/yyshimen/'; return; }
+
+            const users = getUsers();
+            const idx = users.findIndex(u => u.id === currentUser.id);
+            if (idx === -1) return;
+
+            const user = users[idx];
+            if (!user.xpData) {
+                user.xpData = { xp: 0, checkinDates: [], consecutiveDays: 0, lastDate: '', weekCheckins: [], weekId: '' };
+            }
+            const data = user.xpData;
+            const td = today();
+            const weekId = getWeekId();
+
+            // Already checked in today
+            if (data.checkinDates.includes(td)) {
+                showToast('今天已经签到过了～ 🐟');
+                return;
+            }
+
+            // Calculate streak
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yStr = yesterday.toISOString().slice(0, 10);
+
+            let streak = data.consecutiveDays || 0;
+            if (data.lastDate === yStr) {
+                streak += 1;
+            } else if (data.lastDate === td) {
+                // already handled above
+            } else {
+                streak = 1; // reset streak
+            }
+
+            // Calculate bonus from streak
+            let bonusXp = 0;
+            for (const sb of STREAK_BONUSES) {
+                if (streak === sb.day) {
+                    bonusXp = sb.bonus;
+                    break;
+                }
+            }
+
+            let totalXpGain = DAILY_XP + bonusXp;
+
+            // Weekly tracking
+            let weekCheckins = data.weekCheckins || [];
+            let storedWeekId = data.weekId || '';
+            if (storedWeekId !== weekId) {
+                weekCheckins = [];
+                storedWeekId = weekId;
+            }
+            if (!weekCheckins.includes(td)) {
+                weekCheckins.push(td);
+            }
+
+            // Weekly bonus (满7天)
+            let weeklyBonus = 0;
+            if (weekCheckins.length >= 7) {
+                // check if already got this week's bonus
+                if (!data.weeklyBonusWeek || data.weeklyBonusWeek !== weekId) {
+                    weeklyBonus = WEEKLY_BONUS_XP;
+                    data.weeklyBonusWeek = weekId;
+                }
+            }
+            totalXpGain += weeklyBonus;
+
+            // Update data
+            data.xp = (data.xp || 0) + totalXpGain;
+            data.checkinDates.push(td);
+            data.consecutiveDays = streak;
+            data.lastDate = td;
+            data.weekCheckins = weekCheckins;
+            data.weekId = storedWeekId;
+
+            users[idx] = user;
+            saveUsers(users);
+
+            // Update current user display data
+            const level = getLevel(data.xp);
+            const msg = `签到成功！+${DAILY_XP}经验` +
+                (bonusXp > 0 ? `\n连续签到${streak}天奖励 +${bonusXp}经验 🎉` : '') +
+                (weeklyBonus > 0 ? `\n🏆 一周鱼王！+${weeklyBonus}经验` : '');
+            showToast(msg);
+
+            // Update UI
+            render();
+        }
+
+        // ========== Toast ==========
+        function showToast(msg) {
+            const el = document.getElementById('toast');
+            el.innerHTML = msg.replace(/\n/g, '<br>');
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 3500);
+        }
+
+        // ========== Render ==========
+        function render() {
+            const currentUser = getCurrentUser();
+            if (!currentUser) {
+                document.getElementById('app').innerHTML = '<div class="section-card" style="text-align:center;padding:3rem;"><h2>未登录</h2><p style="color:#6b5d4a;margin-top:1rem;">请先去首页登录～</p><a href="https://maodemon.github.io/yyshimen/" style="display:inline-block;margin-top:1rem;padding:0.7rem 2rem;border:1px solid #8b7355;color:#d4c9a8;text-decoration:none;border-radius:4px;">返回首页</a></div>';
+                return;
+            }
+
+            const users = getUsers();
+            const user = users.find(u => u.id === currentUser.id);
+            if (!user) return;
+
+            const data = user.xpData || { xp: 0, checkinDates: [], consecutiveDays: 0, lastDate: '', weekCheckins: [], weekId: '' };
+            const xp = data.xp || 0;
+            const level = getLevel(xp);
+            const lvIdx = getLevelIndex(xp);
+            const td = today();
+            const checkedIn = data.checkinDates.includes(td);
+            const streak = data.consecutiveDays || 0;
+
+            // User card
+            document.getElementById('userAvatar').textContent = user.avatar || '🎭';
+            document.getElementById('userName').textContent = user.nickname || user.username;
+            document.getElementById('userLevel').textContent = 'Lv.' + (lvIdx + 1) + ' · ' + level.name;
+            document.getElementById('userXpText').textContent = '经验: ' + xp;
+            document.getElementById('streakNum').textContent = streak;
+
+            // Check-in button
+            const btn = document.getElementById('checkinBtn');
+            if (checkedIn) {
+                btn.textContent = '✅ 今日已签';
+                btn.classList.add('done');
+                btn.disabled = true;
+            } else {
+                btn.textContent = '📌 签 到';
+                btn.classList.remove('done');
+                btn.disabled = false;
+            }
+            document.getElementById('todayDone').textContent = checkedIn ? '是 ✅' : '否';
+
+            // XP Bar
+            const nextLv = LEVELS[Math.min(lvIdx + 1, LEVELS.length - 1)];
+            const currentLv = LEVELS[lvIdx];
+            const range = nextLv.max - currentLv.min;
+            const progress = Math.min((xp - currentLv.min) / range * 100, 100);
+            document.getElementById('currentLevelName').textContent = currentLv.name;
+            document.getElementById('nextLevelName').textContent = (lvIdx < LEVELS.length - 1) ? '→ ' + nextLv.name : '已满级';
+            document.getElementById('xpBar').style.width = Math.min(progress, 100) + '%';
+            document.getElementById('xpBarLabel').textContent = (xp - currentLv.min) + ' / ' + range + ' XP';
+
+            // Week streak
+            const weekId = getWeekId();
+            const weekCheckins = (data.weekId === weekId) ? (data.weekCheckins || []) : [];
+            document.getElementById('weekCount').textContent = weekCheckins.length;
+
+            const weekEl = document.getElementById('weekStreak');
+            const weekDays = ['一', '二', '三', '四', '五', '六', '日'];
+            let wHtml = '';
+            for (let i = 0; i < 7; i++) {
+                const d = new Date();
+                const startOfWeek = new Date(d);
+                startOfWeek.setDate(d.getDate() - d.getDay() + 1);
+                const dateStr = new Date(startOfWeek);
+                dateStr.setDate(startOfWeek.getDate() + i);
+                const ds = dateStr.toISOString().slice(0, 10);
+                const isChecked = weekCheckins.includes(ds);
+                const isToday = ds === td;
+                wHtml += '<div class="streak-dot' + (isChecked ? ' active' : '') + (isToday ? ' bonus' : '') + '">' + (isChecked ? '✓' : weekDays[i]) + '</div>';
+            }
+            weekEl.innerHTML = wHtml;
+
+            // Streak bonuses
+            const bonusEl = document.getElementById('streakBonusGrid');
+            let bHtml = '';
+            for (const sb of STREAK_BONUSES) {
+                const isReached = streak >= sb.day;
+                bHtml += '<div class="streak-item' + (isReached ? ' highlight' : '') + '">' +
+                    '<div class="day">第' + sb.day + '天</div>' +
+                    '<div class="bonus">+' + sb.bonus + ' XP</div>' +
+                    (isReached ? '✅' : '');
+                if (streak === sb.day - 1) bHtml += '<div style="font-size:0.6rem;color:#ffd700;">⭐ 明日达成</div>';
+                bHtml += '</div>';
+            }
+            bonusEl.innerHTML = bHtml;
+
+            // Leaderboard
+            const lbBody = document.getElementById('lbBody');
+            const sorted = users
+                .map(u => ({ ...u, xp: (u.xpData && u.xpData.xp) || 0, streak: (u.xpData && u.xpData.consecutiveDays) || 0, weekCk: (u.xpData && u.xpData.weekId === weekId) ? (u.xpData.weekCheckins || []).length : 0 }))
+                .sort((a, b) => b.xp - a.xp);
+
+            let lbHtml = '';
+            sorted.forEach((u, i) => {
+                const lv = getLevel(u.xp);
+                const isMe = u.id === currentUser.id;
+                const rankClass = i === 0 ? ' gold' : i === 1 ? ' silver' : i === 2 ? ' bronze' : '';
+                const weekFull = u.weekCk >= 7;
+                lbHtml += '<tr' + (isMe ? ' class="current-user"' : '') + '>' +
+                    '<td class="rank' + rankClass + '">' + (i + 1) + '</td>' +
+                    '<td class="name-col">' + (u.nickname || u.username) + (weekFull ? '<span class="lb-title-tag">👑一周鱼王</span>' : '') + '</td>' +
+                    '<td class="level-col">' + lv.name + '</td>' +
+                    '<td class="xp-col">' + u.xp + ' XP</td>' +
+                    '</tr>';
+            });
+            lbBody.innerHTML = lbHtml;
+
+            // All levels
+            const lvGrid = document.getElementById('levelGrid');
+            let lvHtml = '';
+            LEVELS.forEach((l, i) => {
+                const isCurrent = i === lvIdx;
+                const rangeStr = l.max >= 999999 ? l.min + '+' : l.min + '～' + l.max;
+                lvHtml += '<div class="level-item' + (isCurrent ? ' current' : '') + '">' +
+                    '<div class="lv-name">' + (isCurrent ? '▶ ' : '') + l.name + '</div>' +
+                    '<div class="lv-range">' + rangeStr + ' XP</div>' +
+                    '</div>';
+            });
+            lvGrid.innerHTML = lvHtml;
+        }
+
+        // ========== Init ==========
+        document.addEventListener('DOMContentLoaded', render);
+    </script>
+</body>
+</html>
