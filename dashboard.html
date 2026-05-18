@@ -443,19 +443,12 @@
         }
 
         // ========== GitHub API ==========
-        const GITHUB_TOKEN = '';
-        const REPO_OWNER = 'maodemon';
-        const REPO_NAME = 'yyshimen';
-        const FILE_PATH = 'data/users.json';
-        const RAW_URL = 'https://raw.githubusercontent.com/' + REPO_OWNER + '/' + REPO_NAME + '/master/' + FILE_PATH;
-        const API_URL = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + FILE_PATH;
 
         var g_Users = [];
         var g_Loading = true;
 
         
             try {
-                const resp = await fetch(RAW_URL + '?t=' + Date.now());
                 if (resp.ok) {
                     g_Users = await resp.json();
                 } else {
@@ -496,7 +489,7 @@
             try {
                 var controller = new AbortController();
                 var tid = setTimeout(function(){ controller.abort(); }, 2000);
-                var resp = await fetch(SYNC_URL, { signal: controller.signal });
+                var resp = await fetch(SYNC_SERVER, { signal: controller.signal });
                 clearTimeout(tid);
                 if (resp.ok) {
                     var svUsers = await resp.json();
@@ -521,7 +514,7 @@
             try {
                 var controller = new AbortController();
                 var tid = setTimeout(function(){ controller.abort(); }, 2000);
-                var resp = await fetch(SYNC_URL, {
+                var resp = await fetch(SYNC_SERVER, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(g_Users),
