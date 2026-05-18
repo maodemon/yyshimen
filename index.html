@@ -1094,6 +1094,18 @@
         const ADMIN_USER = { username: 'admin', password: '123456', nickname: '管理员', avatar: '🔑', role: 'admin' };
 
         function getUsers() {
+            // 优先使用Supabase同步的数据（管理员增删账号后即时生效）
+            try {
+                var backup = localStorage.getItem('yyshimen_data_backup');
+                if (backup) {
+                    var parsed = JSON.parse(backup);
+                    if (parsed.length > 0) {
+                        // 同步到本地登录数据
+                        localStorage.setItem(STORAGE_KEY, backup);
+                        return parsed;
+                    }
+                }
+            } catch(e) {}
             try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
         }
         function saveUsers(users) {
