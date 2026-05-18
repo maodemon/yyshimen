@@ -323,110 +323,7 @@
             text-align: right;
         }
 
-        /* ============ 百业 (Professions) ============ */
-        .baiye-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 1.5rem;
-        }
 
-        .baiye-card {
-            position: relative;
-            padding: 2rem 1.2rem;
-            text-align: center;
-            background: linear-gradient(180deg, rgba(26,21,16,0.6) 0%, rgba(10,8,6,0.8) 100%);
-            border: 1px solid rgba(139,115,85,0.15);
-            border-radius: 4px;
-            transition: all 0.4s ease;
-            cursor: pointer;
-            overflow: hidden;
-        }
-        .baiye-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #8b7355, transparent);
-            transform: scaleX(0);
-            transition: transform 0.4s;
-        }
-        .baiye-card:hover {
-            border-color: rgba(139,115,85,0.4);
-            transform: translateY(-4px);
-            background: linear-gradient(180deg, rgba(40,32,24,0.6) 0%, rgba(20,16,12,0.8) 100%);
-        }
-        .baiye-card:hover::before { transform: scaleX(1); }
-
-        .baiye-icon {
-            font-size: 2.5rem;
-            margin-bottom: 0.8rem;
-            display: block;
-        }
-        .baiye-name {
-            font-size: 0.95rem;
-            color: #d4c9a8;
-            margin-bottom: 0.3rem;
-        }
-        .baiye-desc {
-            font-size: 0.75rem;
-            color: #6b5d4a;
-        }
-
-        /* ============ Timeline / 师门传承 ============ */
-        .timeline {
-            position: relative;
-            padding: 2rem 0;
-        }
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 50%;
-            top: 0; bottom: 0;
-            width: 1px;
-            background: linear-gradient(180deg, transparent, #8b7355, transparent);
-            transform: translateX(-50%);
-        }
-        .timeline-item {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 3rem;
-            position: relative;
-        }
-        .timeline-item:nth-child(odd) { flex-direction: row-reverse; }
-        .timeline-item:nth-child(odd) .timeline-content { text-align: left; padding-right: calc(50% + 3rem); }
-        .timeline-item:nth-child(even) .timeline-content { text-align: right; padding-left: calc(50% + 3rem); }
-        .timeline-dot {
-            position: absolute;
-            left: 50%;
-            top: 8px;
-            transform: translateX(-50%);
-            width: 12px; height: 12px;
-            background: #8b7355;
-            border-radius: 50%;
-            border: 2px solid #0a0806;
-            box-shadow: 0 0 0 4px rgba(139,115,85,0.2);
-            z-index: 2;
-        }
-        .timeline-content h4 {
-            font-family: 'Ma Shan Zheng', cursive;
-            font-size: 1.3rem;
-            color: #e0d5b8;
-            margin-bottom: 0.5rem;
-        }
-        .timeline-content p {
-            color: #8b7355;
-            font-size: 0.85rem;
-        }
-        .timeline-year {
-            display: inline-block;
-            font-size: 0.75rem;
-            color: #6b5d4a;
-            letter-spacing: 0.2em;
-            border: 1px solid rgba(139,115,85,0.2);
-            padding: 0.15rem 0.8rem;
-            border-radius: 2rem;
-            margin-bottom: 0.5rem;
-        }
 
         /* ============ 师门成员 ============ */
         .member-grid {
@@ -506,54 +403,89 @@
         }
 
         /* ============ 师门功法 / Sect Skills ============ */
-        .skill-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
-        }
-        .skill-card {
+        .weapon-grid {
             display: flex;
-            gap: 1.5rem;
-            padding: 1.5rem;
-            border: 1px solid rgba(139,115,85,0.1);
-            border-radius: 4px;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .weapon-card {
+            flex: 1;
+            min-width: 120px;
+            padding: 15px;
             background: rgba(26,21,16,0.3);
+            border-radius: 6px;
+            border: 1px solid rgba(139,115,85,0.15);
+            text-align: center;
             transition: all 0.3s;
         }
-        .skill-card:hover {
-            border-color: rgba(139,115,85,0.25);
-            background: rgba(40,32,24,0.4);
+        .weapon-card:hover {
+            border-color: rgba(139,115,85,0.35);
         }
-        .skill-rank {
-            flex-shrink: 0;
-            width: 50px; height: 50px;
-            border-radius: 50%;
-            border: 1px solid rgba(139,115,85,0.3);
+        .weapon-card .icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            color: #8b7355;
+            overflow: hidden;
+            border-radius: 4px;
         }
-        .skill-info h4 {
-            font-size: 1rem;
+        .weapon-card .icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        .weapon-card h4 {
             color: #d4c9a8;
-            margin-bottom: 0.3rem;
+            font-size: 15px;
         }
-        .skill-info p {
-            font-size: 0.8rem;
+        .weapon-card p {
             color: #6b5d4a;
-            line-height: 1.6;
+            font-size: 12px;
         }
-        .skill-tag {
+        .skill-item {
+            margin: 18px 0;
+            padding: 20px;
+            background: rgba(26,21,16,0.3);
+            border-radius: 6px;
+            border-left: 4px solid rgba(139,115,85,0.4);
+        }
+        .skill-item h3 {
+            color: #d4c9a8;
+            margin-bottom: 6px;
+            font-size: 1rem;
+        }
+        .skill-item .tag {
             display: inline-block;
-            font-size: 0.65rem;
-            padding: 0.15rem 0.6rem;
-            border: 1px solid rgba(139,115,85,0.2);
-            border-radius: 2rem;
+            font-size: 0.7rem;
+            padding: 2px 10px;
+            border: 1px solid rgba(139,115,85,0.3);
+            border-radius: 10px;
             color: #8b7355;
-            margin-top: 0.4rem;
-            margin-right: 0.3rem;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        .skill-item p {
+            color: #6b5d4a;
+            font-size: 0.85rem;
+            line-height: 1.7;
+            margin-top: 8px;
+        }
+        .intro-text {
+            font-size: 0.9rem;
+            color: #6b5d4a;
+            margin: 15px 0;
+            line-height: 1.8;
+        }
+        .skills-subtitle {
+            color: #8b7355;
+            font-size: 1rem;
+            margin: 30px 0 15px;
+            border-left: 3px solid rgba(139,115,85,0.4);
+            padding-left: 12px;
         }
 
         /* ============ 加入师门 / Join CTA ============ */
@@ -660,21 +592,14 @@
         @media (max-width: 900px) {
             .intro-grid { grid-template-columns: 1fr; gap: 2rem; }
             .skill-grid { grid-template-columns: 1fr; }
-            .timeline::before { left: 20px; }
-            .timeline-item, .timeline-item:nth-child(odd) { flex-direction: column; }
-            .timeline-item:nth-child(odd) .timeline-content,
-            .timeline-item:nth-child(even) .timeline-content {
-                padding: 0 0 0 3rem;
-                text-align: left;
-            }
-            .timeline-dot { left: 20px; }
+
         }
 
         @media (max-width: 600px) {
             .nav-links { display: none; flex-direction: column; position: absolute; top: 64px; left: 0; right: 0; background: rgba(10,8,6,0.95); padding: 1.5rem; border-bottom: 1px solid rgba(139,115,85,0.15); }
             .nav-links.open { display: flex; }
             .nav-toggle { display: block; }
-            .baiye-grid { grid-template-columns: repeat(2, 1fr); }
+
             .member-grid { grid-template-columns: 1fr; }
             .cta-btn-secondary { margin-left: 0; margin-top: 1rem; }
         }
@@ -829,66 +754,161 @@
             <div class="section-header reveal">
                 <div class="section-tag">功法</div>
                 <h2 class="section-title">师门绝学</h2>
-                <p class="section-desc">燕云摸鱼办传承武学，既有刚猛霸道之剑，亦有阴柔绵长之气。</p>
+                <p class="section-desc">六大武器体系，招式千变万化。</p>
             </div>
 
-            <div class="skill-grid">
-                <div class="skill-card reveal">
-                    <div class="skill-rank">壹</div>
-                    <div class="skill-info">
-                        <h4>凌云剑法 · 基础式</h4>
-                        <p>入门第一课。看似简单，实则蕴含万千变化。讲究"以意御剑，以气行招"。</p>
-                        <span class="skill-tag">入门</span>
-                        <span class="skill-tag">剑法</span>
-                    </div>
+            <p class="intro-text reveal">《燕云十六声》的武学以武器为核心，目前共有六大武器流派，每种武器对应一套独特的招式体系。玩家可在游戏中自由切换武器，根据战况灵活组合，打出千变万化的连招。</p>
+
+            <div class="weapon-grid reveal">
+                <div class="weapon-card">
+                    <div class="icon"><img src="weapon_sword.png" alt="剑"></div>
+                    <h4>剑</h4>
+                    <p>均衡之选，攻守兼备</p>
                 </div>
-                <div class="skill-card reveal">
-                    <div class="skill-rank">贰</div>
-                    <div class="skill-info">
-                        <h4>雁回九式</h4>
-                        <p>燕云摸鱼办镇派剑法。取雁回山云海翻涌之意，九式连环，一气呵成。</p>
-                        <span class="skill-tag">进阶</span>
-                        <span class="skill-tag">剑法</span>
-                        <span class="skill-tag">镇派</span>
-                    </div>
+                <div class="weapon-card">
+                    <div class="icon"><img src="weapon_blade.png" alt="刀"></div>
+                    <h4>刀</h4>
+                    <p>刚猛霸道，以力破巧</p>
                 </div>
-                <div class="skill-card reveal">
-                    <div class="skill-rank">叁</div>
-                    <div class="skill-info">
-                        <h4>青木养气诀</h4>
-                        <p>内功心法。取草木生生不息之意，疗伤养气，固本培元。</p>
-                        <span class="skill-tag">内功</span>
-                        <span class="skill-tag">疗伤</span>
-                    </div>
+                <div class="weapon-card">
+                    <div class="icon"><img src="weapon_spear.png" alt="枪"></div>
+                    <h4>枪</h4>
+                    <p>长兵之王，横扫千军</p>
                 </div>
-                <div class="skill-card reveal">
-                    <div class="skill-rank">肆</div>
-                    <div class="skill-info">
-                        <h4>琴心剑魄</h4>
-                        <p>以音律入剑道的独门绝学。琴音所至，剑意随行。非大彻大悟者不能习之。</p>
-                        <span class="skill-tag">绝学</span>
-                        <span class="skill-tag">音律</span>
-                        <span class="skill-tag">剑法</span>
-                    </div>
+                <div class="weapon-card">
+                    <div class="icon"><img src="weapon_fan.png" alt="扇"></div>
+                    <h4>扇</h4>
+                    <p>潇洒飘逸，以巧取胜</p>
                 </div>
-                <div class="skill-card reveal">
-                    <div class="skill-rank">伍</div>
-                    <div class="skill-info">
-                        <h4>水墨身法</h4>
-                        <p>脱胎于书画的身法。如墨落宣纸，飘忽不定。进退之间，尽显潇洒。</p>
-                        <span class="skill-tag">身法</span>
-                        <span class="skill-tag">轻功</span>
-                    </div>
+                <div class="weapon-card">
+                    <div class="icon"><img src="weapon_dual.png" alt="双刀"></div>
+                    <h4>双刀</h4>
+                    <p>疾如迅风，双刃齐出</p>
                 </div>
-                <div class="skill-card reveal">
-                    <div class="skill-rank">陆</div>
-                    <div class="skill-info">
-                        <h4>天地一炉</h4>
-                        <p>锻造心法。以天地为炉，以心火为引。铸剑亦是铸心。</p>
-                        <span class="skill-tag">锻造</span>
-                        <span class="skill-tag">心法</span>
-                    </div>
+                <div class="weapon-card">
+                    <div class="icon"><img src="weapon_glaive.png" alt="陌刀"></div>
+                    <h4>陌刀</h4>
+                    <p>重器无锋，大巧不工</p>
                 </div>
+            </div>
+
+            <h3 class="skills-subtitle reveal">剑法 · 招式体系</h3>
+            <div class="skill-item reveal">
+                <h3>基础剑法</h3>
+                <span class="tag">入门</span><span class="tag">剑</span>
+                <p>剑乃百兵之君，基础剑法包含刺、劈、撩、抹、拦、截等基本招式。在《燕云十六声》中，剑法注重节奏与时机，轻击可快速连刺，重击可蓄力爆发。剑势连绵不绝，攻守转换流畅自然。</p>
+            </div>
+            <div class="skill-item reveal">
+                <h3>剑气纵横</h3>
+                <span class="tag">进阶</span><span class="tag">剑</span><span class="tag">范围攻击</span>
+                <p>以内力催发剑气，横扫前方扇形范围。此招威力可观，适合在被围攻时使用。剑气出手后仍有短暂留滞，可衔接其他招式打出连击效果。</p>
+            </div>
+            <div class="skill-item reveal">
+                <h3>剑诀 · 破势</h3>
+                <span class="tag">绝技</span><span class="tag">剑</span><span class="tag">破防</span>
+                <p>集中剑意于一击，可破开敌人的防御架势。对处于格挡或霸体状态的敌人有奇效。成功破防后敌人会短暂陷入僵直，是发起连招的绝佳契机。</p>
+            </div>
+
+            <h3 class="skills-subtitle reveal">刀法 · 招式体系</h3>
+            <div class="skill-item reveal">
+                <h3>基础刀法</h3>
+                <span class="tag">入门</span><span class="tag">刀</span>
+                <p>刀法讲究大开大合，以势取胜。基础刀法以劈砍为主，每一击都力道十足。在游戏中，刀的攻击范围较广，但出招后摇较长，需要把握好出手时机。</p>
+            </div>
+            <div class="skill-item reveal">
+                <h3>回风拂柳</h3>
+                <span class="tag">进阶</span><span class="tag">刀</span><span class="tag">范围攻击</span>
+                <p>以身为轴，挥刀旋转一圈，攻击周身所有敌人。此招攻防一体，在被包围时使用效果极佳。旋转期间带有霸体效果，不会被普通攻击打断。</p>
+            </div>
+            <div class="skill-item reveal">
+                <h3>刀诀 · 断岳</h3>
+                <span class="tag">绝技</span><span class="tag">刀</span><span class="tag">蓄力</span>
+                <p>蓄力后向前方劈出惊天一刀，威力巨大，可对直线范围内所有敌人造成巨额伤害。蓄力时间越长伤害越高，但需注意蓄力期间无法移动。</p>
+            </div>
+
+            <h3 class="skills-subtitle reveal">枪法 · 招式体系</h3>
+            <div class="skill-item reveal">
+                <h3>基础枪法</h3>
+                <span class="tag">入门</span><span class="tag">枪</span>
+                <p>枪乃百兵之王，攻击距离最远。基础枪法以刺击为主，配合身法可打出远距离突进。枪法的优势在于控制距离，让敌人难以近身。</p>
+            </div>
+            <div class="skill-item reveal">
+                <h3>枪出如龙</h3>
+                <span class="tag">进阶</span><span class="tag">枪</span><span class="tag">突进</span>
+                <p>持枪向前方猛刺突进，可快速拉近与敌人的距离。命中后可将敌人击退，为后续连招创造空间。此招也是枪法最重要的起手式之一。</p>
+            </div>
+            <div class="skill-item reveal">
+                <h3>枪诀 · 横扫</h3>
+                <span class="tag">绝技</span><span class="tag">枪</span><span class="tag">范围控制</span>
+                <p>抡枪横扫一周，将周围敌人全部击飞。此招控制效果极强，但出招前摇较长，需要预判敌人动向。成功命中后可接后续连招打出爆发伤害。</p>
+            </div>
+
+            <h3 class="skills-subtitle reveal">扇法 · 招式体系</h3>
+            <div class="skill-item reveal">
+                <h3>基础扇法</h3>
+                <span class="tag">入门</span><span class="tag">扇</span>
+                <p>扇是《燕云十六声》中极具特色的武器，以灵动飘逸见长。基础扇法以点、挑、拨、扇为主，动作优雅而致命。扇法可攻可守，既能近身缠斗，也可远程牵制。</p>
+            </div>
+            <div class="skill-item reveal">
+                <h3>风送荷香</h3>
+                <span class="tag">进阶</span><span class="tag">扇</span><span class="tag">远程攻击</span>
+                <p>挥扇发出三道气劲，远程攻击敌人。气劲飞行速度较快，可用来打断敌人的蓄力或远程消耗。此招是扇法最重要的远程牵制手段。</p>
+            </div>
+            <div class="skill-item reveal">
+                <h3>扇诀 · 蝶舞</h3>
+                <span class="tag">绝技</span><span class="tag">扇</span><span class="tag">闪避反击</span>
+                <p>以扇为翼，如蝴蝶般翩然起舞。使用后可快速闪避敌人攻击，并在闪避过程中留下幻影迷惑敌人。闪避后可按攻击键触发反击，打出高额伤害。</p>
+            </div>
+
+            <h3 class="skills-subtitle reveal">双刀 · 招式体系</h3>
+            <div class="skill-item reveal">
+                <h3>基础双刀</h3>
+                <span class="tag">入门</span><span class="tag">双刀</span>
+                <p>双刀以速度取胜，攻速极快。基础双刀可左右手交替攻击，打出连续不断的快速斩击。双刀的每次攻击伤害较低，但连击数高，累积伤害可观。</p>
+            </div>
+            <div class="skill-item reveal">
+                <h3>十字斩</h3>
+                <span class="tag">进阶</span><span class="tag">双刀</span><span class="tag">爆发</span>
+                <p>双刀交叉斩出十字形刀光，对前方敌人造成两次伤害。此招是双刀的核心输出手段，伤害高且出招快，可在连招中无缝衔接。</p>
+            </div>
+            <div class="skill-item reveal">
+                <h3>双刀诀 · 疾风</h3>
+                <span class="tag">绝技</span><span class="tag">双刀</span><span class="tag">多段攻击</span>
+                <p>进入疾风状态，短时间内大幅提升攻击速度，每次攻击可额外触发一次追击。此状态下双刀的连击数翻倍，是爆发输出的核心技能。</p>
+            </div>
+
+            <h3 class="skills-subtitle reveal">陌刀 · 招式体系</h3>
+            <div class="skill-item reveal">
+                <h3>基础陌刀</h3>
+                <span class="tag">入门</span><span class="tag">陌刀</span>
+                <p>陌刀是重兵器，攻速最慢但单次伤害最高。基础陌刀以沉重的劈砸为主，每一击都有击倒效果。使用陌刀时需格外注意出手时机，一击不中就要承担巨大的后摇代价。</p>
+            </div>
+            <div class="skill-item reveal">
+                <h3>地裂斩</h3>
+                <span class="tag">进阶</span><span class="tag">陌刀</span><span class="tag">范围攻击</span>
+                <p>高举陌刀猛砸地面，引发地震波攻击前方扇形区域。被地震波击中的敌人会被短暂击飞。此招范围大、伤害高，是陌刀最重要的范围输出手段。</p>
+            </div>
+            <div class="skill-item reveal">
+                <h3>陌刀诀 · 山崩</h3>
+                <span class="tag">绝技</span><span class="tag">陌刀</span><span class="tag">终结技</span>
+                <p>跃起后以万钧之势砸向地面，造成大范围爆炸性伤害。此招是陌刀的终极技能，伤害冠绝所有武器，但前摇极长，需要在敌人被控制时使用才能确保命中。</p>
+            </div>
+
+            <h3 class="skills-subtitle reveal">内功 · 心法体系</h3>
+            <div class="skill-item reveal">
+                <h3>易筋经</h3>
+                <span class="tag">内功</span><span class="tag">基础心法</span>
+                <p>游戏中的基础内功心法，修炼后可提升气血上限与内力恢复速度。易筋经注重根基，是所有后续心法的基础。</p>
+            </div>
+            <div class="skill-item reveal">
+                <h3>洗髓经</h3>
+                <span class="tag">内功</span><span class="tag">进阶心法</span>
+                <p>进阶内功心法，修炼后可大幅提升内力上限，并解锁更多招式变化。洗髓经偏重内力的运用，适合依赖技能输出的打法。</p>
+            </div>
+            <div class="skill-item reveal">
+                <h3>百业心法</h3>
+                <span class="tag">内功</span><span class="tag">百业</span>
+                <p>与百业系统相关的心法。玩家在从事采集、制造等生活职业时，可逐步领悟百业心法，提升对应生活技能的效率与产出质量。</p>
             </div>
         </div>
     </section>
