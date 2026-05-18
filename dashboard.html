@@ -673,6 +673,7 @@ async function doCheckin() {
                 var sorted = [];
                 for (var i = 0; i < g_Users.length; i++) {
                     var u = g_Users[i];
+                    if (u.role === 'admin') continue; // 管理员不参与排行榜
                     sorted.push({ u: u, xp: (u.xpData && u.xpData.xp) || 0, wc: (u.xpData && u.xpData.weekId === weekId) ? (u.xpData.weekCheckins || []).length : 0 });
                 }
                 sorted.sort(function(a, b) { return b.xp - a.xp; });
