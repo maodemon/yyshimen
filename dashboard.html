@@ -734,6 +734,8 @@ async function doCheckin() {
                 xpData: { xp: 0, checkinDates: [], consecutiveDays: 0, lastDate: '', weekCheckins: [], weekId: '' }
             });
             await saveUsersToGitHub();
+            // 同步到首页登录数据
+            localStorage.setItem('yyshimen_users', JSON.stringify(g_Users));
             document.getElementById('adminNewUsername').value = '';
             document.getElementById('adminNewNickname').value = '';
             document.getElementById('adminNewPassword').value = '';
@@ -750,6 +752,8 @@ async function doCheckin() {
             }
             g_Users = newUsers;
             await saveUsersToGitHub();
+            // 同步到首页登录数据
+            localStorage.setItem('yyshimen_users', JSON.stringify(g_Users));
             document.getElementById('adminMsg').textContent = '✅ ' + un + ' 已删除'; document.getElementById('adminMsg').style.color = '#27ae60';
             renderAll();
         }
